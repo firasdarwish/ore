@@ -34,19 +34,19 @@ func appendToContainer[T any](e entry[T], key []Stringer) {
 }
 
 // RegisterLazyFunc Registers a lazily initialized value using an `Initializer[T]` function signature
-func RegisterLazyFunc[T any](entryType ObjectType, initializer Initializer[T], key ...Stringer) {
+func RegisterLazyFunc[T any](entryType RegistrationType, initializer Initializer[T], key ...Stringer) {
 	e := entry[T]{
-		entryType:            entryType,
+		registrationType:     entryType,
 		anonymousInitializer: &initializer,
 	}
 	appendToContainer[T](e, key)
 }
 
 // RegisterLazyCreator Registers a lazily initialized value using a `Creator[T]` interface
-func RegisterLazyCreator[T any](entryType ObjectType, creator Creator[T], key ...Stringer) {
+func RegisterLazyCreator[T any](entryType RegistrationType, creator Creator[T], key ...Stringer) {
 	e := entry[T]{
-		entryType:       entryType,
-		creatorInstance: creator,
+		registrationType: entryType,
+		creatorInstance:  creator,
 	}
 	appendToContainer[T](e, key)
 }
@@ -54,8 +54,8 @@ func RegisterLazyCreator[T any](entryType ObjectType, creator Creator[T], key ..
 // RegisterEagerSingleton Registers an eagerly instantiated singleton value
 func RegisterEagerSingleton[T any](impl T, key ...Stringer) {
 	e := entry[T]{
-		entryType: Singleton,
-		concrete:  &impl,
+		registrationType: Singleton,
+		concrete:         &impl,
 	}
 	appendToContainer[T](e, key)
 }
@@ -88,7 +88,7 @@ func Get[T any](ctx context.Context, key ...Stringer) (T, context.Context) {
 	ctxValId := fmt.Sprintln(tId, index)
 
 	con, ctx := i.load(ctx, ctxValId)
-	if i.entryType == Singleton {
+	if i.registrationType == Singleton {
 		replace[T](tId, index, i)
 	}
 
@@ -124,7 +124,7 @@ func GetList[T any](ctx context.Context, key ...Stringer) ([]T, context.Context)
 		ctxValId := fmt.Sprintln(tId, index)
 		connn, ctxxx := i.load(ctx, ctxValId)
 
-		if i.entryType == Singleton {
+		if i.registrationType == Singleton {
 			replace[T](tId, index, i)
 		}
 

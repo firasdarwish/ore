@@ -10,20 +10,20 @@ type entry[T any] struct {
 	anonymousInitializer *Initializer[T]
 	creatorInstance      Creator[T]
 	concrete             *T
-	entryType            ObjectType
+	registrationType     RegistrationType
 }
 
 func (i *entry[T]) load(ctx context.Context, ctxTidVal string) (T, context.Context) {
 
 	// try get concrete implementation
-	if i.entryType == Singleton {
+	if i.registrationType == Singleton {
 		if i.concrete != nil {
 			return *i.concrete, ctx
 		}
 	}
 
 	// try get concrete from context scope
-	if i.entryType == Scoped {
+	if i.registrationType == Scoped {
 		fromCtx, ok := ctx.Value(ctxTidVal).(T)
 		if ok {
 			return fromCtx, ctx
@@ -41,13 +41,13 @@ func (i *entry[T]) load(ctx context.Context, ctxTidVal string) (T, context.Conte
 	}
 
 	// if scoped, attach to the current context
-	if i.entryType == Scoped {
+	if i.registrationType == Scoped {
 		ctx = context.WithValue(ctx, ctxTidVal, con)
 	}
 
 	// if was lazily-created, then attach the newly-created concrete implementation
 	// to the entry
-	if i.entryType == Singleton {
+	if i.registrationType == Singleton {
 		i.concrete = &con
 	}
 

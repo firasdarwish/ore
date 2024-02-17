@@ -1,9 +1,9 @@
 package ore
 
-type ObjectType string
+type RegistrationType string
 
 const (
-	Singleton ObjectType = "singleton"
-	Transient            = "transient"
-	Scoped               = "scoped"
+	Singleton RegistrationType = "singleton"
+	Transient                  = "transient"
+	Scoped                     = "scoped"
 )
