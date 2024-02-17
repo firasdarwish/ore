@@ -57,24 +57,24 @@ import "github.com/firasdarwish/ore"
 
 ```go
 type Counter interface {
-AddOne()
-GetCount() int
+  AddOne()
+  GetCount() int
 }
 
 type simpleCounter struct {
-counter int
+  counter int
 }
 
 func (c *simpleCounter) AddOne()  {
-c.counter++;
+  c.counter++
 }
 
 func (c *simpleCounter) GetCount() int {
-return c.counter
+  return c.counter
 }
 
 func (c *simpleCounter) New(ctx context.Context) Counter {
-return &simpleCounter{}
+  return &simpleCounter{}
 }
 ```
 
@@ -318,6 +318,9 @@ func main() {
 }
 
 ```
+
+<br />
+
 
 # Contributing
 
