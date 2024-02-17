@@ -56,11 +56,13 @@ import "github.com/firasdarwish/ore"
 ### Example Service
 
 ```go
+// interface
 type Counter interface {
   AddOne()
   GetCount() int
 }
 
+// implementation
 type simpleCounter struct {
   counter int
 }
@@ -95,7 +97,7 @@ func main() {
   c = &simpleCounter{}
 
   // register
-  ore.RegisterEagerSingleton(c)
+  ore.RegisterEagerSingleton[Counter](c)
 
   ctx := context.Background()
 
