@@ -13,7 +13,7 @@ var (
 )
 
 // Generates a unique identifier for an entry based on type and key(s)
-func typeId[T any](key []Stringer) string {
+func typeId[T any](key []KeyStringer) string {
 	var mockType *T
 	customKey := oreKey(key)
 	tt := fmt.Sprintf("%c:%v", mockType, customKey)
@@ -21,7 +21,7 @@ func typeId[T any](key []Stringer) string {
 }
 
 // Appends an entry to the container with type and key
-func appendToContainer[T any](e entry[T], key []Stringer) {
+func appendToContainer[T any](e entry[T], key []KeyStringer) {
 	if isBuilt {
 		panic(alreadyBuiltCannotAdd)
 	}
@@ -34,7 +34,7 @@ func appendToContainer[T any](e entry[T], key []Stringer) {
 }
 
 // RegisterLazyFunc Registers a lazily initialized value using an `Initializer[T]` function signature
-func RegisterLazyFunc[T any](entryType RegistrationType, initializer Initializer[T], key ...Stringer) {
+func RegisterLazyFunc[T any](entryType RegistrationType, initializer Initializer[T], key ...KeyStringer) {
 	e := entry[T]{
 		registrationType:     entryType,
 		anonymousInitializer: &initializer,
@@ -43,7 +43,7 @@ func RegisterLazyFunc[T any](entryType RegistrationType, initializer Initializer
 }
 
 // RegisterLazyCreator Registers a lazily initialized value using a `Creator[T]` interface
-func RegisterLazyCreator[T any](entryType RegistrationType, creator Creator[T], key ...Stringer) {
+func RegisterLazyCreator[T any](entryType RegistrationType, creator Creator[T], key ...KeyStringer) {
 	e := entry[T]{
 		registrationType: entryType,
 		creatorInstance:  creator,
@@ -52,7 +52,7 @@ func RegisterLazyCreator[T any](entryType RegistrationType, creator Creator[T], 
 }
 
 // RegisterEagerSingleton Registers an eagerly instantiated singleton value
-func RegisterEagerSingleton[T any](impl T, key ...Stringer) {
+func RegisterEagerSingleton[T any](impl T, key ...KeyStringer) {
 	e := entry[T]{
 		registrationType: Singleton,
 		concrete:         &impl,
@@ -61,7 +61,7 @@ func RegisterEagerSingleton[T any](impl T, key ...Stringer) {
 }
 
 // Get Retrieves an instance based on type and key (throws panic for missing or invalid implementations)
-func Get[T any](ctx context.Context, key ...Stringer) (T, context.Context) {
+func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
 	tId := typeId[T](key)
 
 	lock.RLock()
@@ -96,7 +96,7 @@ func Get[T any](ctx context.Context, key ...Stringer) (T, context.Context) {
 }
 
 // GetList Retrieves a list of instances based on type and key (throws panic for missing or invalid implementations)
-func GetList[T any](ctx context.Context, key ...Stringer) ([]T, context.Context) {
+func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
 	tId := typeId[T](key)
 
 	lock.RLock()

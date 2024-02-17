@@ -5,9 +5,9 @@ import (
 	"strings"
 )
 
-type Stringer any
+type KeyStringer any
 
-func oreKey(key []Stringer) string {
+func oreKey(key []KeyStringer) string {
 	l := len(key)
 
 	if key == nil || l == 0 {
@@ -18,7 +18,7 @@ func oreKey(key []Stringer) string {
 		return fmt.Sprintf("%v", key[0])
 	}
 
-	keys := []string{}
+	var keys []string
 
 	for _, stringer := range key {
 		keys = append(keys, fmt.Sprintf("%v", stringer))
