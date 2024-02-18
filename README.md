@@ -287,10 +287,6 @@ type genericCounter[T Numeric] struct {
   counter T
 }
 
-func (gc *genericCounter[T]) New(ctx context.Context) GenericCounter[T] {
-  return &genericCounter[T]{}
-}
-
 func (gc *genericCounter[T]) Add(number T) {
   gc.counter += number
 }
@@ -311,7 +307,7 @@ import (
 func main() {
 
   // register
-  ore.RegisterLazyCreator[GenericCounter[int]](ore.Scoped, func(ctx context.Context) GenericCounter[int] {
+  ore.RegisterLazyFunc[GenericCounter[int]](ore.Scoped, func(ctx context.Context) GenericCounter[int] {
     return &genericCounter[int]{}
   })
 
