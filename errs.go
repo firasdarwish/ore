@@ -16,3 +16,4 @@ func nilVal[T any]() error {
 
 var alreadyBuilt = errors.New("services container is already built")
 var alreadyBuiltCannotAdd = errors.New("cannot appendToContainer, services container is already built")
+var nilKey = errors.New("cannot have nil keys")
