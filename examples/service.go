@@ -31,6 +31,7 @@ type genCounter[T numeric] struct {
 }
 
 func (t *genCounter[T]) Add(num T) {
+	t.count += num
 }
 
 func (t *genCounter[T]) Total() T {
