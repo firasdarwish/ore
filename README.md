@@ -1,5 +1,8 @@
 # ore - Generic Dependency Injection Container for Go
 
+![ore](https://github.com/firasdarwish/ore/assets/1930361/c1426ba1-777a-43f5-8a9a-7520caa45516)
+
+
 ___
 `ore` is a lightweight, generic & simple dependency injection (DI) container for Go.
 
