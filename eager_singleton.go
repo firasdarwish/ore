@@ -1,8 +1,13 @@
 package ore
 
+func isNil[T comparable](impl T) bool {
+	var mock T
+	return impl == mock
+}
+
 // RegisterEagerSingleton Registers an eagerly instantiated singleton value
-func RegisterEagerSingleton[T any](impl T, key ...KeyStringer) {
-	if &impl == nil {
+func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
+	if isNil[T](impl) {
 		panic(nilVal[T]())
 	}
 

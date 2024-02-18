@@ -44,6 +44,7 @@ func replace[T any](typeId string, index int, entry entry[T]) {
 
 func clearAll() {
 	container = make(map[string][]any)
+	isBuilt = false
 }
 
 func Build() {

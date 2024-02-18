@@ -11,7 +11,7 @@ var types = []RegistrationType{Singleton, Transient, Scoped}
 
 func mustHavePanicked(t *testing.T) {
 	if r := recover(); r == nil {
-		t.Errorf("Expected panic when adding nil func")
+		t.Errorf("Expected panic")
 	}
 }
 
@@ -48,6 +48,22 @@ func (c *simpleCounter) GetCount() int {
 
 func (c *simpleCounter) New(ctx context.Context) Counter {
 	return &simpleCounter{}
+}
+
+type simpleCounter2 struct {
+	counter int
+}
+
+func (c *simpleCounter2) AddOne() {
+	c.counter++
+}
+
+func (c *simpleCounter2) GetCount() int {
+	return c.counter
+}
+
+func (c *simpleCounter2) New(ctx context.Context) Counter {
+	return &simpleCounter2{}
 }
 
 type counterWriter struct {
