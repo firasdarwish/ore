@@ -1,3 +1,3 @@
 module github.com/firasdarwish/ore
 
-go 1.22.0
+go 1.22
