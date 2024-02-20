@@ -1,6 +1,10 @@
 # Created by https://www.toptal.com/developers/gitignore/api/goland+all,go,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=goland+all,go,windows
 
+dev
+dev/*
+dev.go
+
 ### Go ###
 # If you prefer the allow list template instead of the deny list, see community template:
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
