@@ -1,6 +1,7 @@
 package ore
 
 import (
+	"context"
 	"fmt"
 	"sync"
 )
@@ -11,8 +12,12 @@ var (
 	container = map[string][]any{}
 )
 
+type Creator[T any] interface {
+	New(ctx context.Context) T
+}
+
 // Generates a unique identifier for an entry based on type and key(s)
-func typeId[T any](key []KeyStringer) string {
+func typeIdentifier[T any](key []KeyStringer) string {
 	for _, stringer := range key {
 		if stringer == nil {
 			panic(nilKey)
@@ -26,25 +31,22 @@ func typeId[T any](key []KeyStringer) string {
 }
 
 // Appends an entry to the container with type and key
-func appendToContainer[T any](e entry[T], key []KeyStringer) {
+func appendToContainer[T any](entry entry[T], key []KeyStringer) {
 	if isBuilt {
 		panic(alreadyBuiltCannotAdd)
 	}
 
-	tId := typeId[T](key)
+	typeId := typeIdentifier[T](key)
 
 	lock.Lock()
-	container[tId] = append(container[tId], e)
+	container[typeId] = append(container[typeId], entry)
 	lock.Unlock()
 }
 
-func replace[T any](typeId string, index int, entry entry[T]) {
+func replaceEntry[T any](typeId string, index int, entry entry[T]) {
+	lock.Lock()
 	container[typeId][index] = entry
-}
-
-func clearAll() {
-	container = make(map[string][]any)
-	isBuilt = false
+	lock.Unlock()
 }
 
 func Build() {

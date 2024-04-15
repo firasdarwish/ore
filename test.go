@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var types = []RegistrationType{Singleton, Transient, Scoped}
+var types = []Lifetime{Singleton, Transient, Scoped}
 
 func mustHavePanicked(t *testing.T) {
 	if r := recover(); r == nil {

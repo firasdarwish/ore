@@ -10,23 +10,21 @@ type entry[T any] struct {
 	anonymousInitializer *Initializer[T]
 	creatorInstance      Creator[T]
 	concrete             *T
-	registrationType     RegistrationType
+	lifetime             Lifetime
 }
 
-func (i *entry[T]) load(ctx context.Context, ctxTidVal string) (T, context.Context) {
+func (i *entry[T]) load(ctx context.Context, ctxTidVal string) (T, context.Context, bool) {
 
 	// try get concrete implementation
-	if i.registrationType == Singleton {
-		if i.concrete != nil {
-			return *i.concrete, ctx
-		}
+	if i.lifetime == Singleton && i.concrete != nil {
+		return *i.concrete, ctx, false
 	}
 
 	// try get concrete from context scope
-	if i.registrationType == Scoped {
+	if i.lifetime == Scoped {
 		fromCtx, ok := ctx.Value(ctxTidVal).(T)
 		if ok {
-			return fromCtx, ctx
+			return fromCtx, ctx, false
 		}
 	}
 
@@ -41,15 +39,17 @@ func (i *entry[T]) load(ctx context.Context, ctxTidVal string) (T, context.Conte
 	}
 
 	// if scoped, attach to the current context
-	if i.registrationType == Scoped {
+	if i.lifetime == Scoped {
 		ctx = context.WithValue(ctx, ctxTidVal, con)
 	}
 
 	// if was lazily-created, then attach the newly-created concrete implementation
 	// to the entry
-	if i.registrationType == Singleton {
+	if i.lifetime == Singleton {
 		i.concrete = &con
+
+		return con, ctx, true
 	}
 
-	return con, ctx
+	return con, ctx, false
 }

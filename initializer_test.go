@@ -91,7 +91,7 @@ func TestRegisterLazyFuncMultipleImplementationsKeyed(t *testing.T) {
 }
 
 func TestRegisterLazyFuncSingletonState(t *testing.T) {
-	var registrationType RegistrationType = Singleton
+	var registrationType Lifetime = Singleton
 
 	clearAll()
 
@@ -117,7 +117,7 @@ func TestRegisterLazyFuncSingletonState(t *testing.T) {
 }
 
 func TestRegisterLazyFuncScopedState(t *testing.T) {
-	var registrationType RegistrationType = Scoped
+	var registrationType Lifetime = Scoped
 
 	clearAll()
 
@@ -145,7 +145,7 @@ func TestRegisterLazyFuncScopedState(t *testing.T) {
 }
 
 func TestRegisterLazyFuncTransientState(t *testing.T) {
-	var registrationType RegistrationType = Transient
+	var registrationType Lifetime = Transient
 
 	clearAll()
 
