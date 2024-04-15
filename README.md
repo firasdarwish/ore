@@ -328,6 +328,25 @@ func main() {
 
 <br />
 
+# Benchmarks
+
+```bash
+goos: windows
+goarch: amd64
+pkg: github.com/firasdarwish/ore
+cpu: 13th Gen Intel(R) Core(TM) i9-13900H
+BenchmarkRegisterLazyFunc
+BenchmarkRegisterLazyFunc-20             5404572               209.6 ns/op
+BenchmarkRegisterLazyCreator
+BenchmarkRegisterLazyCreator-20          5683119               195.5 ns/op
+BenchmarkRegisterEagerSingleton
+BenchmarkRegisterEagerSingleton-20       5335443               218.8 ns/op
+BenchmarkGet
+BenchmarkGet-20                          4231207               279.8 ns/op
+BenchmarkGetList
+BenchmarkGetList-20                      2098818               544.6 ns/op
+```
+
 
 # Contributing
 

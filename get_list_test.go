@@ -19,10 +19,12 @@ func TestGetList(t *testing.T) {
 	}
 }
 
-func TestGetListPanicIfNoImplementations(t *testing.T) {
+func TestGetListShouldNotPanicIfNoImplementations(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	GetList[Counter](context.Background())
+	services, _ := GetList[Counter](context.Background())
+	if len(services) != 0 {
+		t.Errorf("got %v, expected %v", len(services), 0)
+	}
 }
 
 func TestGetListKeyed(t *testing.T) {
