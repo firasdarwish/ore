@@ -13,7 +13,7 @@ var (
 )
 
 type Creator[T any] interface {
-	New(ctx context.Context) T
+	New(ctx context.Context) (T, context.Context)
 }
 
 // Generates a unique identifier for an entry based on type and key(s)

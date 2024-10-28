@@ -84,8 +84,8 @@ func (c *simpleCounter) GetCount() int {
   return c.counter
 }
 
-func (c *simpleCounter) New(ctx context.Context) Counter {
-  return &simpleCounter{}
+func (c *simpleCounter) New(ctx context.Context) (Counter, context.Context) {
+  return &simpleCounter{}, ctx
 }
 ```
 
@@ -169,18 +169,18 @@ import (
 
 func main() {
   // register
-  ore.RegisterLazyFunc[Counter](ore.Scoped, func(ctx context.Context) Counter {
-    return &simpleCounter{}
+  ore.RegisterLazyFunc[Counter](ore.Scoped, func(ctx context.Context) (Counter, context.Context) {
+    return &simpleCounter{}, ctx
   })
 
   // OR
-  //ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) Counter {
-  //  return &simpleCounter{}
+  //ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
+  //  return &simpleCounter{}, ctx
   //})
 
   // Keyed service registration
-  //ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) Counter {
-  // return &simpleCounter{}
+  //ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+  // return &simpleCounter{}, ctx
   //}, "name here", 1234)
 
   ctx := context.Background()
@@ -220,8 +220,8 @@ func main() {
 
   ore.RegisterLazyCreator[Counter](ore.Scoped, &yetAnotherCounter{})
 
-  ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) Counter {
-    return &simpleCounter{}
+  ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
+    return &simpleCounter{}, ctx
   })
 
   ore.RegisterLazyCreator[Counter](ore.Singleton, &yetAnotherCounter{})
@@ -260,8 +260,8 @@ import (
 
 func main() {
   // register
-  ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) Counter {
-    return &simpleCounter{}
+  ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+    return &simpleCounter{}, ctx
   }, "name here", 1234)
 
   //ore.RegisterLazyCreator[Counter](ore.Scoped, &simpleCounter{}, "name here", 1234)
@@ -281,10 +281,11 @@ func main() {
 ```
 
 ## More Complex Example
+
 ```go
 
 type Numeric interface {
-	int
+  int
 }
 
 type GenericCounter[T Numeric] interface {
@@ -316,8 +317,8 @@ import (
 func main() {
 
   // register
-  ore.RegisterLazyFunc[GenericCounter[int]](ore.Scoped, func(ctx context.Context) GenericCounter[int] {
-    return &genericCounter[int]{}
+  ore.RegisterLazyFunc[GenericCounter[int]](ore.Scoped, func(ctx context.Context) (GenericCounter[int], context.Context) {
+    return &genericCounter[int]{}, ctx
   })
 
   // retrieve
@@ -336,25 +337,22 @@ goarch: amd64
 pkg: github.com/firasdarwish/ore
 cpu: 13th Gen Intel(R) Core(TM) i9-13900H
 BenchmarkRegisterLazyFunc
-BenchmarkRegisterLazyFunc-20             5404572               209.6 ns/op
+BenchmarkRegisterLazyFunc-20             4953412               233.5 ns/op
 BenchmarkRegisterLazyCreator
-BenchmarkRegisterLazyCreator-20          5683119               195.5 ns/op
+BenchmarkRegisterLazyCreator-20          5468863               231.3 ns/op
 BenchmarkRegisterEagerSingleton
-BenchmarkRegisterEagerSingleton-20       5335443               218.8 ns/op
+BenchmarkRegisterEagerSingleton-20       4634733               267.4 ns/op
 BenchmarkGet
-BenchmarkGet-20                          4231207               279.8 ns/op
+BenchmarkGet-20                          3766730               321.9 ns/op
 BenchmarkGetList
-BenchmarkGetList-20                      2098818               544.6 ns/op
+BenchmarkGetList-20                      1852132               637.0 ns/op
 ```
-
 
 # Contributing
 
-
-Feel free to contribute by opening issues, suggesting features, or submitting pull requests. We welcome your feedback and contributions.
-
+Feel free to contribute by opening issues, suggesting features, or submitting pull requests. We welcome your feedback
+and contributions.
 
 # License
-
 
 This project is licensed under the MIT License - see the LICENSE file for details.
