@@ -46,8 +46,8 @@ func (c *simpleCounter) GetCount() int {
 	return c.counter
 }
 
-func (c *simpleCounter) New(ctx context.Context) Counter {
-	return &simpleCounter{}
+func (c *simpleCounter) New(ctx context.Context) (Counter, context.Context) {
+	return &simpleCounter{}, ctx
 }
 
 type simpleCounter2 struct {
@@ -62,8 +62,8 @@ func (c *simpleCounter2) GetCount() int {
 	return c.counter
 }
 
-func (c *simpleCounter2) New(ctx context.Context) Counter {
-	return &simpleCounter2{}
+func (c *simpleCounter2) New(ctx context.Context) (Counter, context.Context) {
+	return &simpleCounter2{}, ctx
 }
 
 type counterWriter struct {
@@ -102,6 +102,26 @@ func (c *counterGeneric[T]) GetCount() T {
 	return c.counter
 }
 
-func (c *counterGeneric[T]) New(ctx context.Context) CounterGeneric[T] {
-	return &counterGeneric[T]{}
+func (c *counterGeneric[T]) New(ctx context.Context) (CounterGeneric[T], context.Context) {
+	return &counterGeneric[T]{}, ctx
+}
+
+type c struct {
+	Counter int
+}
+
+type a struct {
+	C *c
+}
+
+func (*a) New(ctx context.Context) (*a, context.Context) {
+	ccc, ctx := Get[*c](ctx)
+
+	return &a{
+		C: ccc,
+	}, ctx
+}
+
+func (*c) New(ctx context.Context) (*c, context.Context) {
+	return &c{}, ctx
 }

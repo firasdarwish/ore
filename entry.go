@@ -3,7 +3,7 @@ package ore
 import "context"
 
 type (
-	Initializer[T any] func(ctx context.Context) T
+	Initializer[T any] func(ctx context.Context) (T, context.Context)
 )
 
 type entry[T any] struct {
@@ -14,7 +14,6 @@ type entry[T any] struct {
 }
 
 func (i *entry[T]) load(ctx context.Context, ctxTidVal string) (T, context.Context, bool) {
-
 	// try get concrete implementation
 	if i.lifetime == Singleton && i.concrete != nil {
 		return *i.concrete, ctx, false
@@ -33,9 +32,9 @@ func (i *entry[T]) load(ctx context.Context, ctxTidVal string) (T, context.Conte
 	// first, try make concrete implementation from `anonymousInitializer`
 	// if nil, try the concrete implementation `Creator`
 	if i.anonymousInitializer != nil {
-		con = (*i.anonymousInitializer)(ctx)
+		con, ctx = (*i.anonymousInitializer)(ctx)
 	} else {
-		con = i.creatorInstance.New(ctx)
+		con, ctx = i.creatorInstance.New(ctx)
 	}
 
 	// if scoped, attach to the current context

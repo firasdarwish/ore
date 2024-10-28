@@ -10,8 +10,8 @@ func BenchmarkRegisterLazyFunc(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) Counter {
-			return &simpleCounter{}
+		RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+			return &simpleCounter{}, ctx
 		})
 	}
 }
@@ -37,8 +37,8 @@ func BenchmarkRegisterEagerSingleton(b *testing.B) {
 func BenchmarkGet(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) Counter {
-		return &simpleCounter{}
+	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+		return &simpleCounter{}, ctx
 	})
 
 	RegisterEagerSingleton[Counter](&simpleCounter{})
@@ -56,8 +56,8 @@ func BenchmarkGet(b *testing.B) {
 func BenchmarkGetList(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) Counter {
-		return &simpleCounter{}
+	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+		return &simpleCounter{}, ctx
 	})
 
 	RegisterEagerSingleton[Counter](&simpleCounter{})

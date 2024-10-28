@@ -17,9 +17,9 @@ func (c *counter) Total() int {
 	return c.count
 }
 
-func (*counter) New(ctx context.Context) Counter {
+func (*counter) New(ctx context.Context) (Counter, context.Context) {
 	fmt.Println("NEWLY INITIALIZED")
-	return &counter{}
+	return &counter{}, ctx
 }
 
 type numeric interface {
@@ -38,6 +38,6 @@ func (t *genCounter[T]) Total() T {
 	return t.count
 }
 
-func (*genCounter[T]) New(ctx context.Context) GenericCounter[T] {
-	return &genCounter[T]{}
+func (*genCounter[T]) New(ctx context.Context) (GenericCounter[T], context.Context) {
+	return &genCounter[T]{}, ctx
 }

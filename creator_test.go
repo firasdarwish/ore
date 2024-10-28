@@ -200,3 +200,26 @@ func TestRegisterLazyCreatorMultipleGenericImplementations(t *testing.T) {
 		}
 	}
 }
+
+func TestRegisterLazyCreatorScopedNested(t *testing.T) {
+	clearAll()
+
+	RegisterLazyCreator[*a](Transient, &a{})
+
+	RegisterLazyCreator[*c](Scoped, &c{})
+
+	ctx := context.Background()
+
+	a1, ctx := Get[*a](ctx)
+	a1.C.Counter += 1
+
+	a2, ctx := Get[*a](ctx)
+	a2.C.Counter += 1
+
+	a3, ctx := Get[*a](ctx)
+	a3.C.Counter += 1
+
+	if got := a2.C.Counter; got != 3 {
+		t.Errorf("got %v, expected %v", got, 3)
+	}
+}
