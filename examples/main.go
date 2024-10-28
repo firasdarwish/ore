@@ -8,14 +8,14 @@ import (
 
 func main() {
 
-	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) Counter {
+	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
-		return &counter{}
+		return &counter{}, ctx
 	}, "firas")
 
-	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) Counter {
+	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
-		return &counter{}
+		return &counter{}, ctx
 	}, "darwish")
 
 	ore.RegisterLazyCreator[Counter](ore.Singleton, &counter{})
