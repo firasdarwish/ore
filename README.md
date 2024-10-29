@@ -245,6 +245,10 @@ func main() {
 
 ```
 
+#### Injecting Mocks in Tests
+
+The last registered implementation takes precedence, so you can register a mock implementation in the test, which will override the real implementation.
+
 <br />
 
 ### Keyed Services Retrieval Example

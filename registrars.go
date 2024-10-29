@@ -6,7 +6,7 @@ func RegisterLazyCreator[T any](lifetime Lifetime, creator Creator[T], key ...Ke
 		panic(nilVal[T]())
 	}
 
-	e := entry[T]{
+	e := serviceResolverImpl[T]{
 		lifetime:        lifetime,
 		creatorInstance: creator,
 	}
@@ -19,9 +19,9 @@ func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
 		panic(nilVal[T]())
 	}
 
-	e := entry[T]{
-		lifetime: Singleton,
-		concrete: &impl,
+	e := serviceResolverImpl[T]{
+		lifetime:          Singleton,
+		singletonConcrete: &impl,
 	}
 	appendToContainer[T](e, key)
 }
@@ -32,7 +32,7 @@ func RegisterLazyFunc[T any](lifetime Lifetime, initializer Initializer[T], key 
 		panic(nilVal[T]())
 	}
 
-	e := entry[T]{
+	e := serviceResolverImpl[T]{
 		lifetime:             lifetime,
 		anonymousInitializer: &initializer,
 	}

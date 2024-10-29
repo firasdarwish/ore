@@ -10,9 +10,9 @@ func TestGet(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
-		c, _ := Get[Counter](context.Background())
+		c, _ := Get[someCounter](context.Background())
 
 		c.AddOne()
 		c.AddOne()
@@ -27,13 +27,13 @@ func TestGetLatestByDefault(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
-		c, _ := Get[Counter](context.Background())
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
+		c, _ := Get[someCounter](context.Background())
 		c.AddOne()
 		c.AddOne()
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter2{})
-		c, _ = Get[Counter](context.Background())
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter2{})
+		c, _ = Get[someCounter](context.Background())
 		c.AddOne()
 		c.AddOne()
 		c.AddOne()
@@ -48,7 +48,7 @@ func TestGetLatestByDefault(t *testing.T) {
 func TestGetPanicIfNoImplementations(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	Get[Counter](context.Background())
+	Get[someCounter](context.Background())
 }
 
 func TestGetKeyed(t *testing.T) {
@@ -57,9 +57,9 @@ func TestGetKeyed(t *testing.T) {
 
 		key := fmt.Sprintf("keynum: %v", i)
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{}, key)
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{}, key)
 
-		c, _ := Get[Counter](context.Background(), key)
+		c, _ := Get[someCounter](context.Background(), key)
 
 		c.AddOne()
 		c.AddOne()

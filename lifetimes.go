@@ -4,6 +4,6 @@ type Lifetime string
 
 const (
 	Singleton Lifetime = "singleton"
-	Transient          = "transient"
-	Scoped             = "scoped"
+	Transient Lifetime = "transient"
+	Scoped    Lifetime = "scoped"
 )

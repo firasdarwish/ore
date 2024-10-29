@@ -9,9 +9,9 @@ func TestRegisterLazyCreator(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
-		c, _ := Get[Counter](context.Background())
+		c, _ := Get[someCounter](context.Background())
 
 		c.AddOne()
 		c.AddOne()
@@ -25,32 +25,32 @@ func TestRegisterLazyCreator(t *testing.T) {
 func TestRegisterLazyCreatorNilFuncTransient(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyCreator[Counter](Transient, nil)
+	RegisterLazyCreator[someCounter](Transient, nil)
 }
 
 func TestRegisterLazyCreatorNilFuncScoped(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyCreator[Counter](Scoped, nil)
+	RegisterLazyCreator[someCounter](Scoped, nil)
 }
 
 func TestRegisterLazyCreatorNilFuncSingleton(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyCreator[Counter](Singleton, nil)
+	RegisterLazyCreator[someCounter](Singleton, nil)
 }
 
 func TestRegisterLazyCreatorMultipleImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
-		counters, _ := GetList[Counter](context.Background())
+		counters, _ := GetList[someCounter](context.Background())
 
 		if got := len(counters); got != 3 {
 			t.Errorf("got %v, expected %v", got, 3)
@@ -62,13 +62,13 @@ func TestRegisterLazyCreatorMultipleImplementationsKeyed(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{}, "firas")
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{}, "firas")
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{}, "firas")
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{}, "firas")
 
-		RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
-		counters, _ := GetList[Counter](context.Background(), "firas")
+		counters, _ := GetList[someCounter](context.Background(), "firas")
 
 		if got := len(counters); got != 2 {
 			t.Errorf("got %v, expected %v", got, 2)
@@ -81,16 +81,16 @@ func TestRegisterLazyCreatorSingletonState(t *testing.T) {
 
 	clearAll()
 
-	RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+	RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
-	c, _ := Get[Counter](context.Background())
+	c, _ := Get[someCounter](context.Background())
 	c.AddOne()
 	c.AddOne()
 
-	c, _ = Get[Counter](context.Background())
+	c, _ = Get[someCounter](context.Background())
 	c.AddOne()
 
-	c, _ = Get[Counter](context.Background())
+	c, _ = Get[someCounter](context.Background())
 	c.AddOne()
 	c.AddOne()
 	c.AddOne()
@@ -105,18 +105,18 @@ func TestRegisterLazyCreatorScopedState(t *testing.T) {
 
 	clearAll()
 
-	RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+	RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
 	ctx := context.Background()
 
-	c, ctx := Get[Counter](ctx)
+	c, ctx := Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, ctx = Get[someCounter](ctx)
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, _ = Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 	c.AddOne()
@@ -131,18 +131,18 @@ func TestRegisterLazyCreatorTransientState(t *testing.T) {
 
 	clearAll()
 
-	RegisterLazyCreator[Counter](registrationType, &simpleCounter{})
+	RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
 
 	ctx := context.Background()
 
-	c, ctx := Get[Counter](ctx)
+	c, ctx := Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, ctx = Get[someCounter](ctx)
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, _ = Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 	c.AddOne()
@@ -155,24 +155,24 @@ func TestRegisterLazyCreatorTransientState(t *testing.T) {
 func TestRegisterLazyCreatorNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyCreator[Counter](Scoped, &simpleCounter{}, nil)
+	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{}, nil)
 }
 
 func TestRegisterLazyCreatorNilKeyOnGetting(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyCreator[Counter](Scoped, &simpleCounter{}, "firas")
+	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{}, "firas")
 
-	Get[Counter](context.Background(), nil)
+	Get[someCounter](context.Background(), nil)
 }
 
 func TestRegisterLazyCreatorGeneric(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[CounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
+		RegisterLazyCreator[someCounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
 
-		c, _ := Get[CounterGeneric[uint]](context.Background())
+		c, _ := Get[someCounterGeneric[uint]](context.Background())
 
 		c.Add(5)
 		c.Add(5)
@@ -187,13 +187,13 @@ func TestRegisterLazyCreatorMultipleGenericImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[CounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
+		RegisterLazyCreator[someCounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
 
-		RegisterLazyCreator[CounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
+		RegisterLazyCreator[someCounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
 
-		RegisterLazyCreator[CounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
+		RegisterLazyCreator[someCounterGeneric[uint]](registrationType, &counterGeneric[uint]{})
 
-		counters, _ := GetList[CounterGeneric[uint]](context.Background())
+		counters, _ := GetList[someCounterGeneric[uint]](context.Background())
 
 		if got := len(counters); got != 3 {
 			t.Errorf("got %v, expected %v", got, 3)
@@ -216,7 +216,7 @@ func TestRegisterLazyCreatorScopedNested(t *testing.T) {
 	a2, ctx := Get[*a](ctx)
 	a2.C.Counter += 1
 
-	a3, ctx := Get[*a](ctx)
+	a3, _ := Get[*a](ctx)
 	a3.C.Counter += 1
 
 	if got := a2.C.Counter; got != 3 {

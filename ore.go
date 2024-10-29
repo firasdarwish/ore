@@ -9,29 +9,32 @@ import (
 var (
 	lock      = &sync.RWMutex{}
 	isBuilt   = false
-	container = map[string][]any{}
+	container = map[typeID][]serviceResolver{}
 )
 
 type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)
 }
 
-// Generates a unique identifier for an entry based on type and key(s)
-func typeIdentifier[T any](key []KeyStringer) string {
+// Generates a unique identifier for a service resolver based on type and key(s)
+func getTypeId(pointerTypeName pointerTypeName, key []KeyStringer) typeID {
 	for _, stringer := range key {
 		if stringer == nil {
 			panic(nilKey)
 		}
 	}
-
-	var mockType *T
 	customKey := oreKey(key)
-	tt := fmt.Sprintf("%c:%v", mockType, customKey)
-	return tt
+	tt := fmt.Sprintf("%s:%v", pointerTypeName, customKey)
+	return typeID(tt)
 }
 
-// Appends an entry to the container with type and key
-func appendToContainer[T any](entry entry[T], key []KeyStringer) {
+// Generates a unique identifier for a service resolver based on type and key(s)
+func typeIdentifier[T any](key []KeyStringer) typeID {
+	return getTypeId(getPointerTypeName[T](), key)
+}
+
+// Appends a service resolver to the container with type and key
+func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
 	if isBuilt {
 		panic(alreadyBuiltCannotAdd)
 	}
@@ -39,13 +42,13 @@ func appendToContainer[T any](entry entry[T], key []KeyStringer) {
 	typeId := typeIdentifier[T](key)
 
 	lock.Lock()
-	container[typeId] = append(container[typeId], entry)
+	container[typeId] = append(container[typeId], resolver)
 	lock.Unlock()
 }
 
-func replaceEntry[T any](typeId string, index int, entry entry[T]) {
+func replaceServiceResolver(typeId typeID, index int, resolver serviceResolver) {
 	lock.Lock()
-	container[typeId][index] = entry
+	container[typeId][index] = resolver
 	lock.Unlock()
 }
 
