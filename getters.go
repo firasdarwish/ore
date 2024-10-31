@@ -4,60 +4,97 @@ import (
 	"context"
 )
 
-// Get Retrieves an instance based on type and key (panics if no valid implementations)
-func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
-	// generate type identifier
-	typeId := typeIdentifier[T](key)
-
+func getLastRegisteredResolver(typeId typeID) (serviceResolver, int) {
 	// try to get service resolver from container
 	lock.RLock()
 	resolvers, resolverExists := container[typeId]
 	lock.RUnlock()
 
 	if !resolverExists {
-		panic(noValidImplementation[T]())
+		return nil, -1
 	}
 
 	count := len(resolvers)
 
 	if count == 0 {
-		panic(noValidImplementation[T]())
+		return nil, -1
 	}
 
-	// lastIndex of the last implementation
+	// index of the last implementation
 	lastIndex := count - 1
-	lastRegisteredResolver := resolvers[lastIndex]
-	service, ctx := lastRegisteredResolver.resolveService(ctx, typeId, lastIndex)
+	return resolvers[lastIndex], lastIndex
+}
+
+// Get Retrieves an instance based on type and key (panics if no valid implementations)
+func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
+	pointerTypeName := getPointerTypeName[T]()
+	typeID := getTypeID(pointerTypeName, key)
+	lastRegisteredResolver, lastIndex := getLastRegisteredResolver(typeID)
+	if lastRegisteredResolver == nil { //not found, T is an alias
+
+		lock.RLock()
+		implementations, implExists := aliases[pointerTypeName]
+		lock.RUnlock()
+
+		if !implExists {
+			panic(noValidImplementation[T]())
+		}
+		count := len(implementations)
+		if count == 0 {
+			panic(noValidImplementation[T]())
+		}
+		for i := count - 1; i >= 0; i-- {
+			impl := implementations[i]
+			typeID = getTypeID(impl, key)
+			lastRegisteredResolver, lastIndex = getLastRegisteredResolver(typeID)
+			if lastRegisteredResolver != nil {
+				break
+			}
+		}
+	}
+	if lastRegisteredResolver == nil {
+		panic(noValidImplementation[T]())
+	}
+	service, ctx := lastRegisteredResolver.resolveService(ctx, typeID, lastIndex)
 	return service.(T), ctx
 }
 
 // GetList Retrieves a list of instances based on type and key
 func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
-	// generate type identifier
-	typeId := typeIdentifier[T](key)
+	inputPointerTypeName := getPointerTypeName[T]()
 
-	// try to get service resolver from container
 	lock.RLock()
-	resolvers, resolverExists := container[typeId]
+	pointerTypeNames, implExists := aliases[inputPointerTypeName]
 	lock.RUnlock()
 
-	if !resolverExists {
-		return make([]T, 0), nil
+	if implExists {
+		pointerTypeNames = append(pointerTypeNames, inputPointerTypeName)
+	} else {
+		pointerTypeNames = []pointerTypeName{inputPointerTypeName}
 	}
 
-	count := len(resolvers)
+	servicesArray := []T{}
 
-	if count == 0 {
-		return make([]T, 0), nil
-	}
+	for i := 0; i < len(pointerTypeNames); i++ {
+		pointerTypeName := pointerTypeNames[i]
+		// generate type identifier
+		typeID := getTypeID(pointerTypeName, key)
 
-	servicesArray := make([]T, count)
+		// try to get service resolver from container
+		lock.RLock()
+		resolvers, resolverExists := container[typeID]
+		lock.RUnlock()
 
-	for index := 0; index < count; index++ {
-		resolver := resolvers[index]
-		service, newCtx := resolver.resolveService(ctx, typeId, index)
-		servicesArray[index] = service.(T)
-		ctx = newCtx
+		if !resolverExists {
+			continue
+		}
+
+		for index := 0; index < len(resolvers); index++ {
+			resolver := resolvers[index]
+			service, newCtx := resolver.resolveService(ctx, typeID, index)
+			servicesArray = append(servicesArray, service.(T))
+			ctx = newCtx
+		}
 	}
 
 	return servicesArray, ctx

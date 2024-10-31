@@ -284,6 +284,43 @@ func main() {
 
 ```
 
+### Alias: Register struct, get interface
+
+```go
+type IPerson interface{}
+type Broker struct {
+  Name string
+} //implements IPerson
+
+type Trader struct {
+  Name string
+} //implements IPerson
+
+func TestGetInterfaceAlias(t *testing.T) {
+  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
+    return &Broker{Name: "Peter"}, ctx
+  })
+  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
+    return &Broker{Name: "John"}, ctx
+  })
+  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Trader, context.Context) {
+    return &Trader{Name: "Mary"}, ctx
+  })
+
+  ore.RegisterAlias[IPerson, *Trader]() //link IPerson to *Trader
+  ore.RegisterAlias[IPerson, *Broker]() //link IPerson to *Broker
+
+  //no IPerson was registered to the container, but we can still `Get` it out of the container.
+  //(1) IPerson is alias to both *Broker and *Trader. *Broker takes precedence because it's the last one linked to IPerson.
+  //(2) multiple *Borker (Peter and John) are registered to the container, the last registered (John) takes precedence.
+  person, _ := ore.Get[IPerson](context.Background()) // will return the broker John
+
+  personList, _ := ore.GetList[IPerson](context.Background()) // will return all registered broker and trader
+}
+```
+
+Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[IPerson](ctx, "module1")` then Ore would return only Services registered under this key ("module1") and panic if no service found.
+
 ## More Complex Example
 
 ```go

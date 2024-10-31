@@ -10,6 +10,9 @@ var (
 	lock      = &sync.RWMutex{}
 	isBuilt   = false
 	container = map[typeID][]serviceResolver{}
+
+	//map the alias type (usually an interface) to the original types (usually implementations of the interface)
+	aliases = map[pointerTypeName][]pointerTypeName{}
 )
 
 type Creator[T any] interface {
@@ -17,7 +20,7 @@ type Creator[T any] interface {
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
-func getTypeId(pointerTypeName pointerTypeName, key []KeyStringer) typeID {
+func getTypeID(pointerTypeName pointerTypeName, key []KeyStringer) typeID {
 	for _, stringer := range key {
 		if stringer == nil {
 			panic(nilKey)
@@ -30,7 +33,7 @@ func getTypeId(pointerTypeName pointerTypeName, key []KeyStringer) typeID {
 
 // Generates a unique identifier for a service resolver based on type and key(s)
 func typeIdentifier[T any](key []KeyStringer) typeID {
-	return getTypeId(getPointerTypeName[T](), key)
+	return getTypeID(getPointerTypeName[T](), key)
 }
 
 // Appends a service resolver to the container with type and key
@@ -49,6 +52,22 @@ func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
 func replaceServiceResolver(typeId typeID, index int, resolver serviceResolver) {
 	lock.Lock()
 	container[typeId][index] = resolver
+	lock.Unlock()
+}
+
+func appendToAliases[TInterface, TImpl any]() {
+	originalType := getPointerTypeName[TImpl]()
+	aliasType := getPointerTypeName[TInterface]()
+	if originalType == aliasType {
+		return
+	}
+	lock.Lock()
+	for _, ot := range aliases[aliasType] {
+		if ot == originalType {
+			return //already registered
+		}
+	}
+	aliases[aliasType] = append(aliases[aliasType], originalType)
 	lock.Unlock()
 }
 

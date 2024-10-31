@@ -13,6 +13,7 @@ func isNil[T comparable](impl T) bool {
 
 func clearAll() {
 	container = make(map[typeID][]serviceResolver)
+	aliases = make(map[pointerTypeName][]pointerTypeName)
 	isBuilt = false
 }
 
