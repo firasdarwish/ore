@@ -1,12 +1,17 @@
 package ore
 
+import (
+	"fmt"
+	"reflect"
+)
+
 // RegisterLazyCreator Registers a lazily initialized value using a `Creator[T]` interface
 func RegisterLazyCreator[T any](lifetime Lifetime, creator Creator[T], key ...KeyStringer) {
 	if creator == nil {
 		panic(nilVal[T]())
 	}
 
-	e := entry[T]{
+	e := serviceResolverImpl[T]{
 		lifetime:        lifetime,
 		creatorInstance: creator,
 	}
@@ -19,9 +24,9 @@ func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
 		panic(nilVal[T]())
 	}
 
-	e := entry[T]{
-		lifetime: Singleton,
-		concrete: &impl,
+	e := serviceResolverImpl[T]{
+		lifetime:          Singleton,
+		singletonConcrete: &impl,
 	}
 	appendToContainer[T](e, key)
 }
@@ -32,9 +37,22 @@ func RegisterLazyFunc[T any](lifetime Lifetime, initializer Initializer[T], key 
 		panic(nilVal[T]())
 	}
 
-	e := entry[T]{
+	e := serviceResolverImpl[T]{
 		lifetime:             lifetime,
 		anonymousInitializer: &initializer,
 	}
 	appendToContainer[T](e, key)
+}
+
+// RegisterAlias Registers an interface type to a concrete implementation.
+// Allowing you to register the concrete implementation to the container and later get the interface from it.
+func RegisterAlias[TInterface, TImpl any]() {
+	interfaceType := reflect.TypeFor[TInterface]()
+	implType := reflect.TypeFor[TImpl]()
+
+	if !implType.Implements(interfaceType) {
+		panic(fmt.Errorf("%s does not implements %s", implType, interfaceType))
+	}
+
+	appendToAliases[TInterface, TImpl]()
 }

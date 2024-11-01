@@ -2,8 +2,6 @@ package ore
 
 import (
 	"context"
-	"io"
-	"strconv"
 	"testing"
 )
 
@@ -15,13 +13,8 @@ func mustHavePanicked(t *testing.T) {
 	}
 }
 
-type Counter interface {
+type someCounter interface {
 	AddOne()
-	GetCount() int
-}
-
-type CounterWriter interface {
-	Add(number int)
 	GetCount() int
 }
 
@@ -29,7 +22,7 @@ type numeric interface {
 	uint
 }
 
-type CounterGeneric[T numeric] interface {
+type someCounterGeneric[T numeric] interface {
 	Add(number T)
 	GetCount() T
 }
@@ -46,7 +39,7 @@ func (c *simpleCounter) GetCount() int {
 	return c.counter
 }
 
-func (c *simpleCounter) New(ctx context.Context) (Counter, context.Context) {
+func (c *simpleCounter) New(ctx context.Context) (someCounter, context.Context) {
 	return &simpleCounter{}, ctx
 }
 
@@ -62,32 +55,8 @@ func (c *simpleCounter2) GetCount() int {
 	return c.counter
 }
 
-func (c *simpleCounter2) New(ctx context.Context) (Counter, context.Context) {
+func (c *simpleCounter2) New(ctx context.Context) (someCounter, context.Context) {
 	return &simpleCounter2{}, ctx
-}
-
-type counterWriter struct {
-	counter int
-	writer  io.Writer
-}
-
-func (c *counterWriter) Add(number int) {
-	_, _ = c.writer.Write([]byte("New Number Added: " + strconv.Itoa(number)))
-	c.counter += number
-}
-
-func (c *counterWriter) GetCount() int {
-	_, _ = c.writer.Write([]byte("Total Count: " + strconv.Itoa(c.counter)))
-	return c.counter
-}
-
-func (c *counterWriter) New(ctx context.Context) CounterWriter {
-
-	writer, _ := Get[io.Writer](ctx)
-
-	return &counterWriter{
-		writer: writer,
-	}
 }
 
 type counterGeneric[T numeric] struct {
@@ -102,7 +71,7 @@ func (c *counterGeneric[T]) GetCount() T {
 	return c.counter
 }
 
-func (c *counterGeneric[T]) New(ctx context.Context) (CounterGeneric[T], context.Context) {
+func (c *counterGeneric[T]) New(ctx context.Context) (someCounterGeneric[T], context.Context) {
 	return &counterGeneric[T]{}, ctx
 }
 
