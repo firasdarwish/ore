@@ -2,8 +2,14 @@ package ore
 
 import "fmt"
 
-type contextValueID string
-type typeID string
+type contextKey struct {
+	typeID
+	index int
+}
+type typeID struct {
+	pointerTypeName pointerTypeName
+	oreKey          string
+}
 type pointerTypeName string
 
 func isNil[T comparable](impl T) bool {
@@ -15,10 +21,6 @@ func clearAll() {
 	container = make(map[typeID][]serviceResolver)
 	aliases = make(map[pointerTypeName][]pointerTypeName)
 	isBuilt = false
-}
-
-func getContextValueID(typeId typeID, index int) contextValueID {
-	return contextValueID(fmt.Sprintln(typeId, index))
 }
 
 // Get type name of *T.

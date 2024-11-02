@@ -2,7 +2,6 @@ package ore
 
 import (
 	"context"
-	"fmt"
 	"sync"
 )
 
@@ -26,9 +25,7 @@ func getTypeID(pointerTypeName pointerTypeName, key []KeyStringer) typeID {
 			panic(nilKey)
 		}
 	}
-	customKey := oreKey(key)
-	tt := fmt.Sprintf("%s:%v", pointerTypeName, customKey)
-	return typeID(tt)
+	return typeID{pointerTypeName, oreKey(key)}
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
@@ -42,10 +39,10 @@ func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
 		panic(alreadyBuiltCannotAdd)
 	}
 
-	typeId := typeIdentifier[T](key)
+	typeID := typeIdentifier[T](key)
 
 	lock.Lock()
-	container[typeId] = append(container[typeId], resolver)
+	container[typeID] = append(container[typeID], resolver)
 	lock.Unlock()
 }
 

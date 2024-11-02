@@ -2,6 +2,8 @@ package ore
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestBuild(t *testing.T) {
@@ -19,13 +21,9 @@ type A2 struct{}
 func TestTypeIdentifier(t *testing.T) {
 	id1 := typeIdentifier[*A1]([]KeyStringer{})
 	id2 := typeIdentifier[*A2]([]KeyStringer{})
-	if id1 == id2 {
-		t.Errorf("got the same identifier value %v, expected different values", id1)
-	}
+	assert.NotEqual(t, id1, id2)
 
 	id3 := typeIdentifier[*A1]([]KeyStringer{"a", "b"})
 	id4 := typeIdentifier[*A1]([]KeyStringer{"a", "b"})
-	if id3 != id4 {
-		t.Errorf("got %v, expected %v", id3, id4)
-	}
+	assert.Equal(t, id3, id4)
 }

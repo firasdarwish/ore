@@ -20,18 +20,17 @@ type serviceResolverImpl[T any] struct {
 //make sure that the `serviceResolverImpl` struct implements the `serviceResolver` interface
 var _ serviceResolver = serviceResolverImpl[any]{}
 
-func (this serviceResolverImpl[T]) resolveService(ctx context.Context, typeId typeID, index int) (any, context.Context) {
-
-	ctxTidVal := getContextValueID(typeId, index)
-
+func (this serviceResolverImpl[T]) resolveService(ctx context.Context, typeID typeID, index int) (any, context.Context) {
 	// try get concrete implementation
 	if this.lifetime == Singleton && this.singletonConcrete != nil {
 		return *this.singletonConcrete, ctx
 	}
 
+	ctxKey := contextKey{typeID, index}
+
 	// try get concrete from context scope
 	if this.lifetime == Scoped {
-		scopedConcrete, ok := ctx.Value(ctxTidVal).(T)
+		scopedConcrete, ok := ctx.Value(ctxKey).(T)
 		if ok {
 			return scopedConcrete, ctx
 		}
@@ -49,14 +48,14 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context, typeId ty
 
 	// if scoped, attach to the current context
 	if this.lifetime == Scoped {
-		ctx = context.WithValue(ctx, ctxTidVal, con)
+		ctx = context.WithValue(ctx, ctxKey, con)
 	}
 
 	// if was lazily-created, then attach the newly-created concrete implementation
 	// to the service resolver
 	if this.lifetime == Singleton {
 		this.singletonConcrete = &con
-		replaceServiceResolver(typeId, index, this)
+		replaceServiceResolver(typeID, index, this)
 		return con, ctx
 	}
 
