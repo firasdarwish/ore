@@ -12,7 +12,16 @@ var (
 
 	//map the alias type (usually an interface) to the original types (usually implementations of the interface)
 	aliases = map[pointerTypeName][]pointerTypeName{}
+
+	//this is a special context key. The value of this key is the collection of other context keys stored in the context.
+	contextKeysRepositoryID = contextKey{
+		typeID{
+			pointerTypeName: "",
+			oreKey:          "The context keys collection of Concrete Scoped Instances",
+		}, -1}
 )
+
+type contextKeysRepository = []contextKey
 
 type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)

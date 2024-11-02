@@ -99,3 +99,56 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 
 	return servicesArray, ctx
 }
+
+// GetResolvedSingletons retrieves a list of Singleton instances that implement the [TInterface].
+// It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
+// This function is useful for cleaning operations.
+//
+// Example:
+//
+//	     disposableSingletons := ore.GetResolvedSingletons[Disposer]()
+//		 for _, disposable := range disposableSingletons {
+//		   disposable.Dispose()
+//		 }
+func GetResolvedSingletons[TInterface any]() []TInterface {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	result := []TInterface{}
+	for _, resolvers := range container {
+		for _, resolver := range resolvers {
+			invokedValue, isInvokedSingleton := resolver.getInvokedSingleton()
+			if isInvokedSingleton {
+				if instance, ok := invokedValue.(TInterface); ok {
+					result = append(result, instance)
+				}
+			}
+		}
+	}
+	return result
+}
+
+// GetResolvedScopedInstances retrieves a list of Scoped instances that implement the [TInterface].
+// It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
+// This function is useful for cleaning operations.
+//
+// Example:
+//
+//	     disposableInstances := ore.GetResolvedScopedInstances[Disposer](ctx)
+//		 for _, disposable := range disposableInstances {
+//		   disposable.Dispose()
+//		 }
+func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterface {
+	contextKeyRepository, ok := ctx.Value(contextKeysRepositoryID).(contextKeysRepository)
+	if !ok {
+		return []TInterface{}
+	}
+	result := []TInterface{}
+	for _, contextKey := range contextKeyRepository {
+		invokedValue := ctx.Value(contextKey)
+		if instance, ok := invokedValue.(TInterface); ok {
+			result = append(result, instance)
+		}
+	}
+	return result
+}

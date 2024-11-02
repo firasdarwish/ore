@@ -8,6 +8,8 @@ type (
 
 type serviceResolver interface {
 	resolveService(ctx context.Context, typeId typeID, index int) (any, context.Context)
+	//return the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
+	getInvokedSingleton() (con any, isInvokedSingleton bool)
 }
 
 type serviceResolverImpl[T any] struct {
@@ -49,6 +51,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context, typeID ty
 	// if scoped, attach to the current context
 	if this.lifetime == Scoped {
 		ctx = context.WithValue(ctx, ctxKey, con)
+		ctx = addToContextKeysRepository(ctx, ctxKey)
 	}
 
 	// if was lazily-created, then attach the newly-created concrete implementation
@@ -60,4 +63,21 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context, typeID ty
 	}
 
 	return con, ctx
+}
+
+func (this serviceResolverImpl[T]) getInvokedSingleton() (con any, isInvokedSingleton bool) {
+	if this.lifetime == Singleton && this.singletonConcrete != nil {
+		return *this.singletonConcrete, true
+	}
+	return nil, false
+}
+
+func addToContextKeysRepository(ctx context.Context, newContextKey contextKey) context.Context {
+	repository, ok := ctx.Value(contextKeysRepositoryID).(contextKeysRepository)
+	if ok {
+		repository = append(repository, newContextKey)
+	} else {
+		repository = contextKeysRepository{newContextKey}
+	}
+	return context.WithValue(ctx, contextKeysRepositoryID, repository)
 }

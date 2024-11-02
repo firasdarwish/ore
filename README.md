@@ -321,6 +321,77 @@ func TestGetInterfaceAlias(t *testing.T) {
 
 Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[IPerson](ctx, "module1")` then Ore would return only Services registered under this key ("module1") and panic if no service found.
 
+### Graceful application termination
+
+On application termination, you want to call `Shutdown()` on all the "Singletons" objects which have been created during the application life time.
+
+Here how Ore can help you:
+
+```go
+// Assuming that the Application provides certain instances with Singleton lifetime.
+// Some of these singletons implement a custom `Shutdowner` interface (defined within the application)
+type Shutdowner interface {
+  Shutdown()
+}
+ore.RegisterEagerSingleton(&Logger{}) //*Logger implements Shutdowner
+ore.RegisterEagerSingleton(&SomeRepository{}) //*SomeRepository implements Shutdowner
+ore.RegisterEagerSingleton(&SomeService{}, "some_module") //*SomeService implements Shutdowner
+
+//On application termination, Ore can help to retreive all the singletons implementation of the `Shutdowner` interface.
+//There might be other `Shutdowner`'s implementation which were lazily registered but have never been created (a.k.a invoked).
+//Ore will ignore them, and return only the concrete instances which can be Shutdown()
+shutdowables := ore.GetResolvedSingletons[Shutdowner]() 
+
+//Now we can Shutdown() them all and gracefully terminate our application.
+for _, instance := range disposables {
+   instance.Shutdown()
+}
+```
+
+In resume, the `ore.GetResolvedSingletons[TInterface]()` function returns a list of Singleton implementations of the `[TInterface]`.
+
+- It  returns only the instances which had been invoked (a.k.a resolved).
+- All the implementations including "keyed" one will be returned.
+
+### Graceful context termination
+
+On context termination, you want to call `Dispose()` on all the "Scoped" objects which have been created during the context life time.
+
+Here how Ore can help you:
+
+```go
+//Assuming that your Application provides certain instances with Scoped lifetime.
+//Some of them implements a "Disposer" interface (defined winthin the application).
+type Disposer interface {
+  Dispose()
+}
+ore.RegisterLazyCreator(ore.Scoped, &SomeDisposableService{}) //*SomeDisposableService implements Disposer
+
+//a new request arrive
+ctx, cancel := context.WithCancel(context.Background())
+
+//start a go routine that will clean up resources when the context is canceled
+go func() {
+  <-ctx.Done() // Wait for the context to be canceled
+  // Perform your cleanup tasks here
+  disposables := ore.GetResolvedScopedInstances[Disposer](ctx)
+  for _, d := range disposables {
+    _ = d.Dispose(ctx)
+  }
+}()
+...
+ore.Get[*SomeDisposableService](ctx) //invoke some scoped services
+cancel() //cancel the ctx
+
+```
+
+The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a list of implementations of the `[TInterface]` which are Scoped in the input context:
+
+- It  returns only the instances which had been invoked (a.k.a resolved) during the context life time.
+- All the implementations including "keyed" one will be returned.
+
+This function would help us to gracefully terminate the context. Example:
+
 ## More Complex Example
 
 ```go
