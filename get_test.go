@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	m "github.com/firasdarwish/ore/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -128,6 +129,38 @@ func TestGetResolvedSingletons(t *testing.T) {
 	assert.Equal(t, 6, len(disposables))
 }
 
+func TestGetResolvedSingletonsOrder(t *testing.T) {
+	//Arrange
+	clearAll()
+	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		return &m.DisposableService1{Name: "A"}, ctx
+	})
+	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		return &m.DisposableService2{Name: "B"}, ctx
+	})
+	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		return &m.DisposableService3{Name: "C"}, ctx
+	})
+
+	ctx := context.Background()
+
+	//invocation order: [A,C,B]
+	_, ctx = Get[*m.DisposableService1](ctx)
+	time.Sleep(1 * time.Millisecond)
+	_, ctx = Get[*m.DisposableService3](ctx)
+	time.Sleep(1 * time.Millisecond)
+	_, _ = Get[*m.DisposableService2](ctx)
+
+	//Act
+	disposables := GetResolvedSingletons[m.Disposer]() //B, A
+
+	//Assert that the order is [B,C,A], the most recent invocation would be returned first
+	assert.Equal(t, 3, len(disposables))
+	assert.Equal(t, "B", disposables[0].String())
+	assert.Equal(t, "C", disposables[1].String())
+	assert.Equal(t, "A", disposables[2].String())
+}
+
 func TestGetResolvedScopedInstances(t *testing.T) {
 	clearAll()
 	RegisterEagerSingleton(&m.DisposableService1{Name: "S1"})
@@ -158,4 +191,36 @@ func TestGetResolvedScopedInstances(t *testing.T) {
 	//Act
 	disposables = GetResolvedScopedInstances[m.Disposer](ctx) //S2, T1
 	assert.Equal(t, 2, len(disposables))
+}
+
+func TestGetResolvedScopedInstancesOrder(t *testing.T) {
+	//Arrange
+	clearAll()
+	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		return &m.DisposableService1{Name: "A"}, ctx
+	})
+	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		return &m.DisposableService2{Name: "B"}, ctx
+	})
+	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		return &m.DisposableService3{Name: "C"}, ctx
+	})
+
+	ctx := context.Background()
+
+	//invocation order: [A,C,B]
+	_, ctx = Get[*m.DisposableService1](ctx)
+	time.Sleep(1 * time.Millisecond)
+	_, ctx = Get[*m.DisposableService3](ctx)
+	time.Sleep(1 * time.Millisecond)
+	_, ctx = Get[*m.DisposableService2](ctx)
+
+	//Act
+	disposables := GetResolvedScopedInstances[m.Disposer](ctx) //B, A
+
+	//Assert that the order is [B,C,A], the most recent invocation would be returned first
+	assert.Equal(t, 3, len(disposables))
+	assert.Equal(t, "B", disposables[0].String())
+	assert.Equal(t, "C", disposables[1].String())
+	assert.Equal(t, "A", disposables[2].String())
 }

@@ -2,6 +2,7 @@ package ore
 
 import (
 	"context"
+	"sort"
 )
 
 func getLastRegisteredResolver(typeId typeID) (serviceResolver, int) {
@@ -55,8 +56,8 @@ func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
 	if lastRegisteredResolver == nil {
 		panic(noValidImplementation[T]())
 	}
-	service, ctx := lastRegisteredResolver.resolveService(ctx, typeID, lastIndex)
-	return service.(T), ctx
+	con, ctx := lastRegisteredResolver.resolveService(ctx, typeID, lastIndex)
+	return con.value.(T), ctx
 }
 
 // GetList Retrieves a list of instances based on type and key
@@ -91,8 +92,8 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 
 		for index := 0; index < len(resolvers); index++ {
 			resolver := resolvers[index]
-			service, newCtx := resolver.resolveService(ctx, typeID, index)
-			servicesArray = append(servicesArray, service.(T))
+			con, newCtx := resolver.resolveService(ctx, typeID, index)
+			servicesArray = append(servicesArray, con.value.(T))
 			ctx = newCtx
 		}
 	}
@@ -101,6 +102,7 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 }
 
 // GetResolvedSingletons retrieves a list of Singleton instances that implement the [TInterface].
+// The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
 // It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
 // This function is useful for cleaning operations.
 //
@@ -114,21 +116,25 @@ func GetResolvedSingletons[TInterface any]() []TInterface {
 	lock.RLock()
 	defer lock.RUnlock()
 
-	result := []TInterface{}
+	list := []*concrete{}
+
+	//filtering
 	for _, resolvers := range container {
 		for _, resolver := range resolvers {
-			invokedValue, isInvokedSingleton := resolver.getInvokedSingleton()
+			con, isInvokedSingleton := resolver.getInvokedSingleton()
 			if isInvokedSingleton {
-				if instance, ok := invokedValue.(TInterface); ok {
-					result = append(result, instance)
+				if _, ok := con.value.(TInterface); ok {
+					list = append(list, con)
 				}
 			}
 		}
 	}
-	return result
+
+	return sortAndSelect[TInterface](list)
 }
 
 // GetResolvedScopedInstances retrieves a list of Scoped instances that implement the [TInterface].
+// The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
 // It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
 // This function is useful for cleaning operations.
 //
@@ -143,12 +149,31 @@ func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterfac
 	if !ok {
 		return []TInterface{}
 	}
-	result := []TInterface{}
+
+	list := []*concrete{}
+
+	//filtering
 	for _, contextKey := range contextKeyRepository {
-		invokedValue := ctx.Value(contextKey)
-		if instance, ok := invokedValue.(TInterface); ok {
-			result = append(result, instance)
+		con := ctx.Value(contextKey).(*concrete)
+		if _, ok := con.value.(TInterface); ok {
+			list = append(list, con)
 		}
+	}
+
+	return sortAndSelect[TInterface](list)
+}
+
+// sortAndSelect sorts concretes by invocation order and return its value.
+func sortAndSelect[TInterface any](list []*concrete) []TInterface {
+	//sorting
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].createdAt.After(list[j].createdAt)
+	})
+
+	//selecting
+	result := make([]TInterface, len(list))
+	for i := 0; i < len(list); i++ {
+		result[i] = list[i].value.(TInterface)
 	}
 	return result
 }

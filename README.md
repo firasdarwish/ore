@@ -343,6 +343,7 @@ ore.RegisterEagerSingleton(&SomeService{}, "some_module") //*SomeService impleme
 shutdowables := ore.GetResolvedSingletons[Shutdowner]() 
 
 //Now we can Shutdown() them all and gracefully terminate our application.
+//The most recently created instance will be Shutdown() first
 for _, instance := range disposables {
    instance.Shutdown()
 }
@@ -352,6 +353,7 @@ In resume, the `ore.GetResolvedSingletons[TInterface]()` function returns a list
 
 - It  returns only the instances which had been invoked (a.k.a resolved).
 - All the implementations including "keyed" one will be returned.
+- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
 
 ### Graceful context termination
 
@@ -375,6 +377,7 @@ go func() {
   <-ctx.Done() // Wait for the context to be canceled
   // Perform your cleanup tasks here
   disposables := ore.GetResolvedScopedInstances[Disposer](ctx)
+  //The most recently created instance will be Dispose() first
   for _, d := range disposables {
     _ = d.Dispose(ctx)
   }
@@ -389,8 +392,7 @@ The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a lis
 
 - It  returns only the instances which had been invoked (a.k.a resolved) during the context life time.
 - All the implementations including "keyed" one will be returned.
-
-This function would help us to gracefully terminate the context. Example:
+- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
 
 ## More Complex Example
 
