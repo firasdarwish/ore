@@ -1,8 +1,9 @@
-package main
+package simple
 
 import (
 	"context"
 	"fmt"
+
 	"github.com/firasdarwish/ore"
 )
 

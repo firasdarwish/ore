@@ -7,11 +7,11 @@ import (
 )
 
 func noValidImplementation[T any]() error {
-	return errors.New(fmt.Sprintf("implementation not found for type: %s", reflect.TypeFor[T]()))
+	return fmt.Errorf("implementation not found for type: %s", reflect.TypeFor[T]())
 }
 
 func nilVal[T any]() error {
-	return errors.New(fmt.Sprintf("nil implementation for type: %s", reflect.TypeFor[T]()))
+	return fmt.Errorf("nil implementation for type: %s", reflect.TypeFor[T]())
 }
 
 var alreadyBuilt = errors.New("services container is already built")

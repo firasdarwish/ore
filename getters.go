@@ -2,75 +2,178 @@ package ore
 
 import (
 	"context"
+	"sort"
 )
 
-// Get Retrieves an instance based on type and key (panics if no valid implementations)
-func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
-	// generate type identifier
-	typeId := typeIdentifier[T](key)
-
-	// try to get entry from container
+func getLastRegisteredResolver(typeId typeID) (serviceResolver, int) {
+	// try to get service resolver from container
 	lock.RLock()
-	entries, entryExists := container[typeId]
+	resolvers, resolverExists := container[typeId]
 	lock.RUnlock()
 
-	if !entryExists {
-		panic(noValidImplementation[T]())
+	if !resolverExists {
+		return nil, -1
 	}
 
-	entriesCount := len(entries)
+	count := len(resolvers)
 
-	if entriesCount == 0 {
-		panic(noValidImplementation[T]())
+	if count == 0 {
+		return nil, -1
 	}
 
 	// index of the last implementation
-	index := entriesCount - 1
+	lastIndex := count - 1
+	return resolvers[lastIndex], lastIndex
+}
 
-	implementation := entries[index].(entry[T])
+// Get Retrieves an instance based on type and key (panics if no valid implementations)
+func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
+	pointerTypeName := getPointerTypeName[T]()
+	typeID := getTypeID(pointerTypeName, key)
+	lastRegisteredResolver, lastIndex := getLastRegisteredResolver(typeID)
+	if lastRegisteredResolver == nil { //not found, T is an alias
 
-	service, ctx, updateEntry := implementation.load(ctx, contextValueId(typeId, index))
-	if updateEntry {
-		replaceEntry[T](typeId, index, implementation)
+		lock.RLock()
+		implementations, implExists := aliases[pointerTypeName]
+		lock.RUnlock()
+
+		if !implExists {
+			panic(noValidImplementation[T]())
+		}
+		count := len(implementations)
+		if count == 0 {
+			panic(noValidImplementation[T]())
+		}
+		for i := count - 1; i >= 0; i-- {
+			impl := implementations[i]
+			typeID = getTypeID(impl, key)
+			lastRegisteredResolver, lastIndex = getLastRegisteredResolver(typeID)
+			if lastRegisteredResolver != nil {
+				break
+			}
+		}
 	}
-
-	return service, ctx
+	if lastRegisteredResolver == nil {
+		panic(noValidImplementation[T]())
+	}
+	con, ctx := lastRegisteredResolver.resolveService(ctx, typeID, lastIndex)
+	return con.value.(T), ctx
 }
 
 // GetList Retrieves a list of instances based on type and key
 func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
-	// generate type identifier
-	typeId := typeIdentifier[T](key)
+	inputPointerTypeName := getPointerTypeName[T]()
 
-	// try to get entry from container
 	lock.RLock()
-	entries, entryExists := container[typeId]
+	pointerTypeNames, implExists := aliases[inputPointerTypeName]
 	lock.RUnlock()
 
-	if !entryExists {
-		return make([]T, 0), nil
+	if implExists {
+		pointerTypeNames = append(pointerTypeNames, inputPointerTypeName)
+	} else {
+		pointerTypeNames = []pointerTypeName{inputPointerTypeName}
 	}
 
-	entriesCount := len(entries)
+	servicesArray := []T{}
 
-	if entriesCount == 0 {
-		return make([]T, 0), nil
-	}
+	for i := 0; i < len(pointerTypeNames); i++ {
+		pointerTypeName := pointerTypeNames[i]
+		// generate type identifier
+		typeID := getTypeID(pointerTypeName, key)
 
-	servicesArray := make([]T, entriesCount)
+		// try to get service resolver from container
+		lock.RLock()
+		resolvers, resolverExists := container[typeID]
+		lock.RUnlock()
 
-	for index := 0; index < entriesCount; index++ {
-		e := entries[index].(entry[T])
-
-		service, newCtx, updateEntry := e.load(ctx, contextValueId(typeId, index))
-
-		if updateEntry {
-			replaceEntry[T](typeId, index, e)
+		if !resolverExists {
+			continue
 		}
 
-		servicesArray[index] = service
-		ctx = newCtx
+		for index := 0; index < len(resolvers); index++ {
+			resolver := resolvers[index]
+			con, newCtx := resolver.resolveService(ctx, typeID, index)
+			servicesArray = append(servicesArray, con.value.(T))
+			ctx = newCtx
+		}
 	}
 
 	return servicesArray, ctx
+}
+
+// GetResolvedSingletons retrieves a list of Singleton instances that implement the [TInterface].
+// The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+// It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
+// This function is useful for cleaning operations.
+//
+// Example:
+//
+//	     disposableSingletons := ore.GetResolvedSingletons[Disposer]()
+//		 for _, disposable := range disposableSingletons {
+//		   disposable.Dispose()
+//		 }
+func GetResolvedSingletons[TInterface any]() []TInterface {
+	lock.RLock()
+	defer lock.RUnlock()
+
+	list := []*concrete{}
+
+	//filtering
+	for _, resolvers := range container {
+		for _, resolver := range resolvers {
+			con, isInvokedSingleton := resolver.getInvokedSingleton()
+			if isInvokedSingleton {
+				if _, ok := con.value.(TInterface); ok {
+					list = append(list, con)
+				}
+			}
+		}
+	}
+
+	return sortAndSelect[TInterface](list)
+}
+
+// GetResolvedScopedInstances retrieves a list of Scoped instances that implement the [TInterface].
+// The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+// It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
+// This function is useful for cleaning operations.
+//
+// Example:
+//
+//	     disposableInstances := ore.GetResolvedScopedInstances[Disposer](ctx)
+//		 for _, disposable := range disposableInstances {
+//		   disposable.Dispose()
+//		 }
+func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterface {
+	contextKeyRepository, ok := ctx.Value(contextKeysRepositoryID).(contextKeysRepository)
+	if !ok {
+		return []TInterface{}
+	}
+
+	list := []*concrete{}
+
+	//filtering
+	for _, contextKey := range contextKeyRepository {
+		con := ctx.Value(contextKey).(*concrete)
+		if _, ok := con.value.(TInterface); ok {
+			list = append(list, con)
+		}
+	}
+
+	return sortAndSelect[TInterface](list)
+}
+
+// sortAndSelect sorts concretes by invocation order and return its value.
+func sortAndSelect[TInterface any](list []*concrete) []TInterface {
+	//sorting
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].createdAt.After(list[j].createdAt)
+	})
+
+	//selecting
+	result := make([]TInterface, len(list))
+	for i := 0; i < len(list); i++ {
+		result[i] = list[i].value.(TInterface)
+	}
+	return result
 }
