@@ -43,7 +43,7 @@ func typeIdentifier[T any](key []KeyStringer) typeID {
 }
 
 // Appends a service resolver to the container with type and key
-func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
+func appendToContainer[T any](resolver serviceResolverImpl[T], key []KeyStringer) {
 	if isBuilt {
 		panic(alreadyBuiltCannotAdd)
 	}
@@ -51,13 +51,14 @@ func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
 	typeID := typeIdentifier[T](key)
 
 	lock.Lock()
+	resolver.ID = contextKey{typeID, len(container[typeID])}
 	container[typeID] = append(container[typeID], resolver)
 	lock.Unlock()
 }
 
-func replaceServiceResolver(typeId typeID, index int, resolver serviceResolver) {
+func replaceServiceResolver[T any](resolver serviceResolverImpl[T]) {
 	lock.Lock()
-	container[typeId][index] = resolver
+	container[resolver.ID.typeID][resolver.ID.index] = resolver
 	lock.Unlock()
 }
 

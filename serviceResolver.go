@@ -10,7 +10,7 @@ type (
 )
 
 type serviceResolver interface {
-	resolveService(ctx context.Context, typeId typeID, index int) (*concrete, context.Context)
+	resolveService(ctx context.Context) (*concrete, context.Context)
 	//return the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
 	getInvokedSingleton() (con *concrete, isInvokedSingleton bool)
 }
@@ -20,22 +20,21 @@ type serviceResolverImpl[T any] struct {
 	creatorInstance      Creator[T]
 	singletonConcrete    *concrete
 	lifetime             Lifetime
+	ID                   contextKey
 }
 
 // make sure that the `serviceResolverImpl` struct implements the `serviceResolver` interface
 var _ serviceResolver = serviceResolverImpl[any]{}
 
-func (this serviceResolverImpl[T]) resolveService(ctx context.Context, typeID typeID, index int) (*concrete, context.Context) {
+func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concrete, context.Context) {
 	// try get concrete implementation
 	if this.lifetime == Singleton && this.singletonConcrete != nil {
 		return this.singletonConcrete, ctx
 	}
 
-	ctxKey := contextKey{typeID, index}
-
 	// try get concrete from context scope
 	if this.lifetime == Scoped {
-		scopedConcrete, ok := ctx.Value(ctxKey).(*concrete)
+		scopedConcrete, ok := ctx.Value(this.ID).(*concrete)
 		if ok {
 			return scopedConcrete, ctx
 		}
@@ -59,15 +58,15 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context, typeID ty
 
 	// if scoped, attach to the current context
 	if this.lifetime == Scoped {
-		ctx = context.WithValue(ctx, ctxKey, con)
-		ctx = addToContextKeysRepository(ctx, ctxKey)
+		ctx = context.WithValue(ctx, this.ID, con)
+		ctx = addToContextKeysRepository(ctx, this.ID)
 	}
 
 	// if was lazily-created, then attach the newly-created concrete implementation
 	// to the service resolver
 	if this.lifetime == Singleton {
 		this.singletonConcrete = con
-		replaceServiceResolver(typeID, index, this)
+		replaceServiceResolver(this)
 		return con, ctx
 	}
 

@@ -5,32 +5,32 @@ import (
 	"sort"
 )
 
-func getLastRegisteredResolver(typeId typeID) (serviceResolver, int) {
+func getLastRegisteredResolver(typeID typeID) serviceResolver {
 	// try to get service resolver from container
 	lock.RLock()
-	resolvers, resolverExists := container[typeId]
+	resolvers, resolverExists := container[typeID]
 	lock.RUnlock()
 
 	if !resolverExists {
-		return nil, -1
+		return nil
 	}
 
 	count := len(resolvers)
 
 	if count == 0 {
-		return nil, -1
+		return nil
 	}
 
 	// index of the last implementation
 	lastIndex := count - 1
-	return resolvers[lastIndex], lastIndex
+	return resolvers[lastIndex]
 }
 
 // Get Retrieves an instance based on type and key (panics if no valid implementations)
 func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
 	pointerTypeName := getPointerTypeName[T]()
 	typeID := getTypeID(pointerTypeName, key)
-	lastRegisteredResolver, lastIndex := getLastRegisteredResolver(typeID)
+	lastRegisteredResolver := getLastRegisteredResolver(typeID)
 	if lastRegisteredResolver == nil { //not found, T is an alias
 
 		lock.RLock()
@@ -47,7 +47,7 @@ func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
 		for i := count - 1; i >= 0; i-- {
 			impl := implementations[i]
 			typeID = getTypeID(impl, key)
-			lastRegisteredResolver, lastIndex = getLastRegisteredResolver(typeID)
+			lastRegisteredResolver = getLastRegisteredResolver(typeID)
 			if lastRegisteredResolver != nil {
 				break
 			}
@@ -56,7 +56,7 @@ func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
 	if lastRegisteredResolver == nil {
 		panic(noValidImplementation[T]())
 	}
-	con, ctx := lastRegisteredResolver.resolveService(ctx, typeID, lastIndex)
+	con, ctx := lastRegisteredResolver.resolveService(ctx)
 	return con.value.(T), ctx
 }
 
@@ -92,7 +92,7 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 
 		for index := 0; index < len(resolvers); index++ {
 			resolver := resolvers[index]
-			con, newCtx := resolver.resolveService(ctx, typeID, index)
+			con, newCtx := resolver.resolveService(ctx)
 			servicesArray = append(servicesArray, con.value.(T))
 			ctx = newCtx
 		}
