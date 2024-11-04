@@ -2,50 +2,78 @@ package ore
 
 import (
 	"context"
-	"fmt"
 	"sync"
 )
 
 var (
 	lock      = &sync.RWMutex{}
 	isBuilt   = false
-	container = map[string][]any{}
+	container = map[typeID][]serviceResolver{}
+
+	//map the alias type (usually an interface) to the original types (usually implementations of the interface)
+	aliases = map[pointerTypeName][]pointerTypeName{}
+
+	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
+	contextKeysRepositoryID = contextKey{
+		typeID{
+			pointerTypeName: "",
+			oreKey:          "The context keys repository",
+		}, -1}
 )
+
+type contextKeysRepository = []contextKey
 
 type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)
 }
 
-// Generates a unique identifier for an entry based on type and key(s)
-func typeIdentifier[T any](key []KeyStringer) string {
+// Generates a unique identifier for a service resolver based on type and key(s)
+func getTypeID(pointerTypeName pointerTypeName, key []KeyStringer) typeID {
 	for _, stringer := range key {
 		if stringer == nil {
 			panic(nilKey)
 		}
 	}
-
-	var mockType *T
-	customKey := oreKey(key)
-	tt := fmt.Sprintf("%c:%v", mockType, customKey)
-	return tt
+	return typeID{pointerTypeName, oreKey(key)}
 }
 
-// Appends an entry to the container with type and key
-func appendToContainer[T any](entry entry[T], key []KeyStringer) {
+// Generates a unique identifier for a service resolver based on type and key(s)
+func typeIdentifier[T any](key []KeyStringer) typeID {
+	return getTypeID(getPointerTypeName[T](), key)
+}
+
+// Appends a service resolver to the container with type and key
+func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
 	if isBuilt {
 		panic(alreadyBuiltCannotAdd)
 	}
 
-	typeId := typeIdentifier[T](key)
+	typeID := typeIdentifier[T](key)
 
 	lock.Lock()
-	container[typeId] = append(container[typeId], entry)
+	container[typeID] = append(container[typeID], resolver)
 	lock.Unlock()
 }
 
-func replaceEntry[T any](typeId string, index int, entry entry[T]) {
+func replaceServiceResolver(typeId typeID, index int, resolver serviceResolver) {
 	lock.Lock()
-	container[typeId][index] = entry
+	container[typeId][index] = resolver
+	lock.Unlock()
+}
+
+func appendToAliases[TInterface, TImpl any]() {
+	originalType := getPointerTypeName[TImpl]()
+	aliasType := getPointerTypeName[TInterface]()
+	if originalType == aliasType {
+		return
+	}
+	lock.Lock()
+	for _, ot := range aliases[aliasType] {
+		if ot == originalType {
+			return //already registered
+		}
+	}
+	aliases[aliasType] = append(aliases[aliasType], originalType)
 	lock.Unlock()
 }
 

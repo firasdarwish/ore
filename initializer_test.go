@@ -9,11 +9,11 @@ func TestRegisterLazyFunc(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		})
 
-		c, _ := Get[Counter](context.Background())
+		c, _ := Get[someCounter](context.Background())
 
 		c.AddOne()
 		c.AddOne()
@@ -27,38 +27,38 @@ func TestRegisterLazyFunc(t *testing.T) {
 func TestRegisterLazyFuncNilFuncTransient(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyFunc[Counter](Transient, nil)
+	RegisterLazyFunc[someCounter](Transient, nil)
 }
 
 func TestRegisterLazyFuncNilFuncScoped(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyFunc[Counter](Scoped, nil)
+	RegisterLazyFunc[someCounter](Scoped, nil)
 }
 
 func TestRegisterLazyFuncNilFuncSingleton(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyFunc[Counter](Singleton, nil)
+	RegisterLazyFunc[someCounter](Singleton, nil)
 }
 
 func TestRegisterLazyFuncMultipleImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		})
 
-		RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		})
 
-		RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		})
 
-		counters, _ := GetList[Counter](context.Background())
+		counters, _ := GetList[someCounter](context.Background())
 
 		if got := len(counters); got != 3 {
 			t.Errorf("got %v, expected %v", got, 3)
@@ -70,19 +70,19 @@ func TestRegisterLazyFuncMultipleImplementationsKeyed(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		}, "firas")
 
-		RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		}, "firas")
 
-		RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		})
 
-		counters, _ := GetList[Counter](context.Background(), "firas")
+		counters, _ := GetList[someCounter](context.Background(), "firas")
 
 		if got := len(counters); got != 2 {
 			t.Errorf("got %v, expected %v", got, 2)
@@ -95,18 +95,18 @@ func TestRegisterLazyFuncSingletonState(t *testing.T) {
 
 	clearAll()
 
-	RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+	RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 		return &simpleCounter{}, ctx
 	})
 
-	c, _ := Get[Counter](context.Background())
+	c, _ := Get[someCounter](context.Background())
 	c.AddOne()
 	c.AddOne()
 
-	c, _ = Get[Counter](context.Background())
+	c, _ = Get[someCounter](context.Background())
 	c.AddOne()
 
-	c, _ = Get[Counter](context.Background())
+	c, _ = Get[someCounter](context.Background())
 	c.AddOne()
 	c.AddOne()
 	c.AddOne()
@@ -121,20 +121,20 @@ func TestRegisterLazyFuncScopedState(t *testing.T) {
 
 	clearAll()
 
-	RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+	RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 		return &simpleCounter{}, ctx
 	})
 
 	ctx := context.Background()
 
-	c, ctx := Get[Counter](ctx)
+	c, ctx := Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, ctx = Get[someCounter](ctx)
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, _ = Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 	c.AddOne()
@@ -149,20 +149,20 @@ func TestRegisterLazyFuncTransientState(t *testing.T) {
 
 	clearAll()
 
-	RegisterLazyFunc[Counter](registrationType, func(ctx context.Context) (Counter, context.Context) {
+	RegisterLazyFunc[someCounter](registrationType, func(ctx context.Context) (someCounter, context.Context) {
 		return &simpleCounter{}, ctx
 	})
 
 	ctx := context.Background()
 
-	c, ctx := Get[Counter](ctx)
+	c, ctx := Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, ctx = Get[someCounter](ctx)
 	c.AddOne()
 
-	c, ctx = Get[Counter](ctx)
+	c, _ = Get[someCounter](ctx)
 	c.AddOne()
 	c.AddOne()
 	c.AddOne()
@@ -175,7 +175,7 @@ func TestRegisterLazyFuncTransientState(t *testing.T) {
 func TestRegisterLazyFuncNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
 		return &simpleCounter{}, ctx
 	}, nil)
 }
@@ -183,22 +183,22 @@ func TestRegisterLazyFuncNilKeyOnRegistering(t *testing.T) {
 func TestRegisterLazyFuncNilKeyOnGetting(t *testing.T) {
 	clearAll()
 	defer mustHavePanicked(t)
-	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
 		return &simpleCounter{}, ctx
 	}, "firas")
 
-	Get[Counter](context.Background(), nil)
+	Get[someCounter](context.Background(), nil)
 }
 
 func TestRegisterLazyFuncGeneric(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[CounterGeneric[uint]](registrationType, func(ctx context.Context) (CounterGeneric[uint], context.Context) {
+		RegisterLazyFunc[someCounterGeneric[uint]](registrationType, func(ctx context.Context) (someCounterGeneric[uint], context.Context) {
 			return &counterGeneric[uint]{}, ctx
 		})
 
-		c, _ := Get[CounterGeneric[uint]](context.Background())
+		c, _ := Get[someCounterGeneric[uint]](context.Background())
 
 		c.Add(5)
 		c.Add(5)
@@ -213,19 +213,19 @@ func TestRegisterLazyFuncMultipleGenericImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[CounterGeneric[uint]](registrationType, func(ctx context.Context) (CounterGeneric[uint], context.Context) {
+		RegisterLazyFunc[someCounterGeneric[uint]](registrationType, func(ctx context.Context) (someCounterGeneric[uint], context.Context) {
 			return &counterGeneric[uint]{}, ctx
 		})
 
-		RegisterLazyFunc[CounterGeneric[uint]](registrationType, func(ctx context.Context) (CounterGeneric[uint], context.Context) {
+		RegisterLazyFunc[someCounterGeneric[uint]](registrationType, func(ctx context.Context) (someCounterGeneric[uint], context.Context) {
 			return &counterGeneric[uint]{}, ctx
 		})
 
-		RegisterLazyFunc[CounterGeneric[uint]](registrationType, func(ctx context.Context) (CounterGeneric[uint], context.Context) {
+		RegisterLazyFunc[someCounterGeneric[uint]](registrationType, func(ctx context.Context) (someCounterGeneric[uint], context.Context) {
 			return &counterGeneric[uint]{}, ctx
 		})
 
-		counters, _ := GetList[CounterGeneric[uint]](context.Background())
+		counters, _ := GetList[someCounterGeneric[uint]](context.Background())
 
 		if got := len(counters); got != 3 {
 			t.Errorf("got %v, expected %v", got, 3)
@@ -255,7 +255,7 @@ func TestRegisterLazyFuncScopedNested(t *testing.T) {
 	a2, ctx := Get[*a](ctx)
 	a2.C.Counter += 1
 
-	a3, ctx := Get[*a](ctx)
+	a3, _ := Get[*a](ctx)
 	a3.C.Counter += 1
 
 	if got := a2.C.Counter; got != 3 {

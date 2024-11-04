@@ -245,6 +245,10 @@ func main() {
 
 ```
 
+#### Injecting Mocks in Tests
+
+The last registered implementation takes precedence, so you can register a mock implementation in the test, which will override the real implementation.
+
 <br />
 
 ### Keyed Services Retrieval Example
@@ -279,6 +283,116 @@ func main() {
 }
 
 ```
+
+### Alias: Register struct, get interface
+
+```go
+type IPerson interface{}
+type Broker struct {
+  Name string
+} //implements IPerson
+
+type Trader struct {
+  Name string
+} //implements IPerson
+
+func TestGetInterfaceAlias(t *testing.T) {
+  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
+    return &Broker{Name: "Peter"}, ctx
+  })
+  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
+    return &Broker{Name: "John"}, ctx
+  })
+  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Trader, context.Context) {
+    return &Trader{Name: "Mary"}, ctx
+  })
+
+  ore.RegisterAlias[IPerson, *Trader]() //link IPerson to *Trader
+  ore.RegisterAlias[IPerson, *Broker]() //link IPerson to *Broker
+
+  //no IPerson was registered to the container, but we can still `Get` it out of the container.
+  //(1) IPerson is alias to both *Broker and *Trader. *Broker takes precedence because it's the last one linked to IPerson.
+  //(2) multiple *Borker (Peter and John) are registered to the container, the last registered (John) takes precedence.
+  person, _ := ore.Get[IPerson](context.Background()) // will return the broker John
+
+  personList, _ := ore.GetList[IPerson](context.Background()) // will return all registered broker and trader
+}
+```
+
+Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[IPerson](ctx, "module1")` then Ore would return only Services registered under this key ("module1") and panic if no service found.
+
+### Graceful application termination
+
+On application termination, you want to call `Shutdown()` on all the "Singletons" objects which have been created during the application life time.
+
+Here how Ore can help you:
+
+```go
+// Assuming that the Application provides certain instances with Singleton lifetime.
+// Some of these singletons implement a custom `Shutdowner` interface (defined within the application)
+type Shutdowner interface {
+  Shutdown()
+}
+ore.RegisterEagerSingleton(&Logger{}) //*Logger implements Shutdowner
+ore.RegisterEagerSingleton(&SomeRepository{}) //*SomeRepository implements Shutdowner
+ore.RegisterEagerSingleton(&SomeService{}, "some_module") //*SomeService implements Shutdowner
+
+//On application termination, Ore can help to retreive all the singletons implementation of the `Shutdowner` interface.
+//There might be other `Shutdowner`'s implementation which were lazily registered but have never been created (a.k.a invoked).
+//Ore will ignore them, and return only the concrete instances which can be Shutdown()
+shutdowables := ore.GetResolvedSingletons[Shutdowner]() 
+
+//Now we can Shutdown() them all and gracefully terminate our application.
+//The most recently created instance will be Shutdown() first
+for _, instance := range disposables {
+   instance.Shutdown()
+}
+```
+
+In resume, the `ore.GetResolvedSingletons[TInterface]()` function returns a list of Singleton implementations of the `[TInterface]`.
+
+- It  returns only the instances which had been invoked (a.k.a resolved).
+- All the implementations including "keyed" one will be returned.
+- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+
+### Graceful context termination
+
+On context termination, you want to call `Dispose()` on all the "Scoped" objects which have been created during the context life time.
+
+Here how Ore can help you:
+
+```go
+//Assuming that your Application provides certain instances with Scoped lifetime.
+//Some of them implements a "Disposer" interface (defined winthin the application).
+type Disposer interface {
+  Dispose()
+}
+ore.RegisterLazyCreator(ore.Scoped, &SomeDisposableService{}) //*SomeDisposableService implements Disposer
+
+//a new request arrive
+ctx, cancel := context.WithCancel(context.Background())
+
+//start a go routine that will clean up resources when the context is canceled
+go func() {
+  <-ctx.Done() // Wait for the context to be canceled
+  // Perform your cleanup tasks here
+  disposables := ore.GetResolvedScopedInstances[Disposer](ctx)
+  //The most recently created instance will be Dispose() first
+  for _, d := range disposables {
+    _ = d.Dispose(ctx)
+  }
+}()
+...
+ore.Get[*SomeDisposableService](ctx) //invoke some scoped services
+cancel() //cancel the ctx
+
+```
+
+The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a list of implementations of the `[TInterface]` which are Scoped in the input context:
+
+- It  returns only the instances which had been invoked (a.k.a resolved) during the context life time.
+- All the implementations including "keyed" one will be returned.
+- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
 
 ## More Complex Example
 

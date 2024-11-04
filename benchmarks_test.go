@@ -10,7 +10,7 @@ func BenchmarkRegisterLazyFunc(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+		RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
 			return &simpleCounter{}, ctx
 		})
 	}
@@ -21,7 +21,7 @@ func BenchmarkRegisterLazyCreator(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterLazyCreator[Counter](Scoped, &simpleCounter{})
+		RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
 	}
 }
 
@@ -30,44 +30,44 @@ func BenchmarkRegisterEagerSingleton(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterEagerSingleton[Counter](&simpleCounter{})
+		RegisterEagerSingleton[someCounter](&simpleCounter{})
 	}
 }
 
 func BenchmarkGet(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
 		return &simpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[Counter](&simpleCounter{})
+	RegisterEagerSingleton[someCounter](&simpleCounter{})
 
-	RegisterLazyCreator[Counter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
 
 	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Get[Counter](ctx)
+		Get[someCounter](ctx)
 	}
 }
 
 func BenchmarkGetList(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[Counter](Scoped, func(ctx context.Context) (Counter, context.Context) {
+	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
 		return &simpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[Counter](&simpleCounter{})
+	RegisterEagerSingleton[someCounter](&simpleCounter{})
 
-	RegisterLazyCreator[Counter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
 
 	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		GetList[Counter](ctx)
+		GetList[someCounter](ctx)
 	}
 }
