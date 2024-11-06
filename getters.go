@@ -102,7 +102,8 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 }
 
 // GetResolvedSingletons retrieves a list of Singleton instances that implement the [TInterface].
-// The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+// The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the "most recently" created one.
+// If an instance "A" depends on certain instances "B" and "C" then this function guarantee to return "B" and "C" before "A" in the list.
 // It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
 // This function is useful for cleaning operations.
 //
@@ -135,6 +136,7 @@ func GetResolvedSingletons[TInterface any]() []TInterface {
 
 // GetResolvedScopedInstances retrieves a list of Scoped instances that implement the [TInterface].
 // The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+// If an instance "A" depends on certain instances "B" and "C" then this function guarantee to return "B" and "C" before "A" in the list.
 // It would return only the instances which had been resolved. Other lazy implementations which have never been invoked will not be returned.
 // This function is useful for cleaning operations.
 //
@@ -167,7 +169,9 @@ func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterfac
 func sortAndSelect[TInterface any](list []*concrete) []TInterface {
 	//sorting
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].createdAt.After(list[j].createdAt)
+		return list[i].createdAt.After(list[j].createdAt) ||
+			(list[i].createdAt == list[j].createdAt &&
+				list[i].invocationLevel > list[j].invocationLevel)
 	})
 
 	//selecting

@@ -1,7 +1,9 @@
 package ore
 
 import (
+	"container/list"
 	"context"
+	"fmt"
 	"time"
 )
 
@@ -10,18 +12,46 @@ type (
 )
 
 type serviceResolver interface {
+	fmt.Stringer
 	resolveService(ctx context.Context) (*concrete, context.Context)
 	//return the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
 	getInvokedSingleton() (con *concrete, isInvokedSingleton bool)
 }
 
+type resolverMetadata struct {
+	id       contextKey
+	lifetime Lifetime
+}
+
 type serviceResolverImpl[T any] struct {
+	resolverMetadata
 	anonymousInitializer *Initializer[T]
 	creatorInstance      Creator[T]
 	singletonConcrete    *concrete
-	lifetime             Lifetime
-	ID                   contextKey
 }
+
+// resolversChain is a linkedList[resolverMetadata], describing a dependencies chain which a resolver has to invoke other resolvers to resolve its dependencies.
+// Before a resolver creates a new concrete value it would be registered to the resolversChain.
+// Once the concrete is resolved (with help of other resolvers), then it would be removed from the chain.
+//
+// While a Resolver forms a tree with other dependent resolvers.
+//
+// Example:
+//
+//	A calls B and C; B calls D; C calls E.
+//
+// then resolversChain is a "path" in the tree from the root to one of the bottom.
+//
+// Example:
+//
+//	A -> B -> D or A -> C -> E
+//
+// The resolversChain is stored in the context. Analyze the chain will help to
+//
+//   - (1) detect the invocation level
+//   - (2) detect cyclic dependencies
+//   - (3) detect lifetime misalignment (when a service of longer lifetime depends on a service of shorter lifetime)
+type resolversChain = *list.List
 
 // make sure that the `serviceResolverImpl` struct implements the `serviceResolver` interface
 var _ serviceResolver = serviceResolverImpl[any]{}
@@ -34,11 +64,26 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 
 	// try get concrete from context scope
 	if this.lifetime == Scoped {
-		scopedConcrete, ok := ctx.Value(this.ID).(*concrete)
+		scopedConcrete, ok := ctx.Value(this.id).(*concrete)
 		if ok {
 			return scopedConcrete, ctx
 		}
 	}
+
+	// this resolver is about to create a new concrete value, we have to put it to the resolversChain until the creation done
+
+	// get the current currentChain from the context
+	var currentChain resolversChain
+	untypedCurrentChain := ctx.Value(contextKeyResolversChain)
+	if untypedCurrentChain == nil {
+		currentChain = list.New()
+		ctx = context.WithValue(ctx, contextKeyResolversChain, currentChain)
+	} else {
+		currentChain = untypedCurrentChain.(resolversChain)
+	}
+
+	// push this newest resolver to the resolversChain
+	marker := appendResolver(currentChain, this.resolverMetadata)
 
 	var concreteValue T
 
@@ -50,16 +95,22 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 		concreteValue, ctx = this.creatorInstance.New(ctx)
 	}
 
+	invocationLevel := currentChain.Len()
+
+	// the concreteValue is created, we must to remove it from the resolversChain so that downstream resolvers (meaning the future resolvers) won't link to it
+	currentChain.Remove(marker)
+
 	con := &concrete{
-		value:     concreteValue,
-		lifetime:  this.lifetime,
-		createdAt: time.Now(),
+		value:           concreteValue,
+		lifetime:        this.lifetime,
+		createdAt:       time.Now(),
+		invocationLevel: invocationLevel,
 	}
 
 	// if scoped, attach to the current context
 	if this.lifetime == Scoped {
-		ctx = context.WithValue(ctx, this.ID, con)
-		ctx = addToContextKeysRepository(ctx, this.ID)
+		ctx = context.WithValue(ctx, this.id, con)
+		ctx = addToContextKeysRepository(ctx, this.id)
 	}
 
 	// if was lazily-created, then attach the newly-created concrete implementation
@@ -71,6 +122,28 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	}
 
 	return con, ctx
+}
+
+// appendToResolversChain push the given resolver to the Back of the ResolversChain.
+// `marker.previous` refers to the calling (parent) resolver
+func appendResolver(chain resolversChain, currentResolver resolverMetadata) (marker *list.Element) {
+	if chain.Len() != 0 {
+		//detect lifetime misalignment
+		lastElem := chain.Back()
+		lastResolver := lastElem.Value.(resolverMetadata)
+		if lastResolver.lifetime > currentResolver.lifetime {
+			panic(lifetimeMisalignment(lastResolver, currentResolver))
+		}
+
+		//detect cyclic dependencies
+		for e := chain.Back(); e != nil; e = e.Prev() {
+			if e.Value.(resolverMetadata).id == currentResolver.id {
+				panic(cyclicDependency(currentResolver))
+			}
+		}
+	}
+	marker = chain.PushBack(currentResolver) // `marker.previous` refers to the calling (parent) resolver
+	return marker
 }
 
 func (this serviceResolverImpl[T]) getInvokedSingleton() (con *concrete, isInvokedSingleton bool) {
@@ -88,4 +161,8 @@ func addToContextKeysRepository(ctx context.Context, newContextKey contextKey) c
 		repository = contextKeysRepository{newContextKey}
 	}
 	return context.WithValue(ctx, contextKeysRepositoryID, repository)
+}
+
+func (this resolverMetadata) String() string {
+	return fmt.Sprintf("Resolver(%s, type={%s}, key='%s')", this.lifetime, getUnderlyingTypeName(this.id.pointerTypeName), this.id.oreKey)
 }

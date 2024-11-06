@@ -321,6 +321,22 @@ func TestGetInterfaceAlias(t *testing.T) {
 
 Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[IPerson](ctx, "module1")` then Ore would return only Services registered under this key ("module1") and panic if no service found.
 
+### Registration validation
+
+It is recommended to build your container (which means register ALL the resolvers) only ONCE on application start.
+Next, it is recommended to call `ore.Validate()`
+
+- either in a test which is automatically run on your CI/CD (option 1)
+- or on application start, just after resolvers registration (option 2)
+
+option 1 (run `ore.Validate` on test) is often a better choice.
+
+`ore.Validate()` invokes ALL your registered resolvers, it panics when something gone wrong. The purpose of this function is to panic early when the Container is bad configured:
+
+- Missing depedency: you forgot to register certain resolvers.
+- Circular dependency: A depends on B whic depends on A.
+- Lifetime misalignment: a longer lifetime service (eg. Singleton) depends on a shorter one (eg Transient).
+
 ### Graceful application termination
 
 On application termination, you want to call `Shutdown()` on all the "Singletons" objects which have been created during the application life time.
@@ -353,7 +369,8 @@ In resume, the `ore.GetResolvedSingletons[TInterface]()` function returns a list
 
 - It  returns only the instances which had been invoked (a.k.a resolved).
 - All the implementations including "keyed" one will be returned.
-- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the "most recently created" one.
+  - if "A" depends on "B", "C", Ore will make sure to return "B" and "C" first in the list so that they would be shutdowned before "A". However Ore won't guarantee the order of "B" and "C"
 
 ### Graceful context termination
 
@@ -392,7 +409,8 @@ The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a lis
 
 - It  returns only the instances which had been invoked (a.k.a resolved) during the context life time.
 - All the implementations including "keyed" one will be returned.
-- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+- The returned instances are sorted by invocation order, the first one being the most "recently created" one.
+  - if "A" depends on "B", "C", Ore will make sure to return "B" and "C" first in the list so that they would be Disposed before "A". However Ore won't guarantee the order of "B" and "C"
 
 ## More Complex Example
 

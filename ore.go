@@ -14,11 +14,9 @@ var (
 	aliases = map[pointerTypeName][]pointerTypeName{}
 
 	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
-	contextKeysRepositoryID = contextKey{
-		typeID{
-			pointerTypeName: "",
-			oreKey:          "The context keys repository",
-		}, -1}
+	contextKeysRepositoryID specialContextKey = "The context keys repository"
+	//contextKeyResolversChain is a special context key. The value of this key is the [ResolversChain].
+	contextKeyResolversChain specialContextKey = "Dependencies chain"
 )
 
 type contextKeysRepository = []contextKey
@@ -51,14 +49,14 @@ func appendToContainer[T any](resolver serviceResolverImpl[T], key []KeyStringer
 	typeID := typeIdentifier[T](key)
 
 	lock.Lock()
-	resolver.ID = contextKey{typeID, len(container[typeID])}
+	resolver.id = contextKey{typeID, len(container[typeID])}
 	container[typeID] = append(container[typeID], resolver)
 	lock.Unlock()
 }
 
 func replaceServiceResolver[T any](resolver serviceResolverImpl[T]) {
 	lock.Lock()
-	container[resolver.ID.typeID][resolver.ID.index] = resolver
+	container[resolver.id.typeID][resolver.id.index] = resolver
 	lock.Unlock()
 }
 
@@ -84,4 +82,20 @@ func Build() {
 	}
 
 	isBuilt = true
+}
+
+// Validate invokes all registered resolvers. It panics if any of them fails.
+// It is recommended to call this function on application start, or in the CI/CD test pipeline
+// The objectif is to panic early when the container is bad configured. For eg:
+//
+//   - (1) Missing depedency (forget to register certain resolvers)
+//   - (2) cyclic dependency
+//   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
+func Validate() {
+	ctx := context.Background()
+	for _, resolvers := range container {
+		for _, resolver := range resolvers {
+			_, ctx = resolver.resolveService(ctx)
+		}
+	}
 }
