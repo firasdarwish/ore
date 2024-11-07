@@ -3,6 +3,8 @@ package ore
 import (
 	"context"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterLazyCreator(t *testing.T) {
@@ -24,20 +26,23 @@ func TestRegisterLazyCreator(t *testing.T) {
 
 func TestRegisterLazyCreatorNilFuncTransient(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	RegisterLazyCreator[someCounter](Transient, nil)
+	assert.Panics(t, func() {
+		RegisterLazyCreator[someCounter](Transient, nil)
+	})
 }
 
 func TestRegisterLazyCreatorNilFuncScoped(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	RegisterLazyCreator[someCounter](Scoped, nil)
+	assert.Panics(t, func() {
+		RegisterLazyCreator[someCounter](Scoped, nil)
+	})
 }
 
 func TestRegisterLazyCreatorNilFuncSingleton(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	RegisterLazyCreator[someCounter](Singleton, nil)
+	assert.Panics(t, func() {
+		RegisterLazyCreator[someCounter](Singleton, nil)
+	})
 }
 
 func TestRegisterLazyCreatorMultipleImplementations(t *testing.T) {
@@ -154,16 +159,17 @@ func TestRegisterLazyCreatorTransientState(t *testing.T) {
 
 func TestRegisterLazyCreatorNilKeyOnRegistering(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{}, nil)
+	assert.Panics(t, func() {
+		RegisterLazyCreator[someCounter](Scoped, &simpleCounter{}, "", nil)
+	})
 }
 
 func TestRegisterLazyCreatorNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
 	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{}, "firas")
-
-	Get[someCounter](context.Background(), nil)
+	assert.Panics(t, func() {
+		Get[someCounter](context.Background(), nil)
+	})
 }
 
 func TestRegisterLazyCreatorGeneric(t *testing.T) {

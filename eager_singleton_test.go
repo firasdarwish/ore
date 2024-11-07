@@ -3,6 +3,8 @@ package ore
 import (
 	"context"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterEagerSingleton(t *testing.T) {
@@ -22,8 +24,9 @@ func TestRegisterEagerSingleton(t *testing.T) {
 
 func TestRegisterEagerSingletonNilImplementation(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	RegisterEagerSingleton[someCounter](nil)
+	assert.Panics(t, func() {
+		RegisterEagerSingleton[someCounter](nil)
+	})
 }
 
 func TestRegisterEagerSingletonMultipleImplementations(t *testing.T) {
@@ -79,16 +82,17 @@ func TestRegisterEagerSingletonSingletonState(t *testing.T) {
 
 func TestRegisterEagerSingletonNilKeyOnRegistering(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	RegisterEagerSingleton[someCounter](&simpleCounter{}, nil)
+	assert.Panics(t, func() {
+		RegisterEagerSingleton[someCounter](&simpleCounter{}, nil, "")
+	})
 }
 
 func TestRegisterEagerSingletonNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
 	RegisterEagerSingleton[someCounter](&simpleCounter{}, "firas")
-
-	Get[someCounter](context.Background(), nil)
+	assert.Panics(t, func() {
+		Get[someCounter](context.Background(), nil, "")
+	})
 }
 
 func TestRegisterEagerSingletonGeneric(t *testing.T) {

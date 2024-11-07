@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// RegisterLazyCreator Registers a lazily initialized value using a `Creator[T]` interface
-func RegisterLazyCreator[T any](lifetime Lifetime, creator Creator[T], key ...KeyStringer) {
+// RegisterLazyCreatorToContainer Registers a lazily initialized value to the given container using a `Creator[T]` interface
+func RegisterLazyCreatorToContainer[T any](con *Container, lifetime Lifetime, creator Creator[T], key ...KeyStringer) {
 	if creator == nil {
 		panic(nilVal[T]())
 	}
@@ -18,11 +18,16 @@ func RegisterLazyCreator[T any](lifetime Lifetime, creator Creator[T], key ...Ke
 		},
 		creatorInstance: creator,
 	}
-	appendToContainer[T](e, key)
+	addResolver[T](con, e, key...)
 }
 
-// RegisterEagerSingleton Registers an eagerly instantiated singleton value
-func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
+// RegisterLazyCreator Registers a lazily initialized value using a `Creator[T]` interface
+func RegisterLazyCreator[T any](lifetime Lifetime, creator Creator[T], key ...KeyStringer) {
+	RegisterLazyCreatorToContainer[T](DefaultContainer, lifetime, creator, key...)
+}
+
+// RegisterEagerSingleton Registers an eagerly instantiated singleton value to the given container
+func RegisterEagerSingletonToContainer[T comparable](con *Container, impl T, key ...KeyStringer) {
 	if isNil[T](impl) {
 		panic(nilVal[T]())
 	}
@@ -37,11 +42,16 @@ func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
 			invocationTime: time.Now(),
 		},
 	}
-	appendToContainer[T](e, key)
+	addResolver[T](con, e, key...)
 }
 
-// RegisterLazyFunc Registers a lazily initialized value using an `Initializer[T]` function signature
-func RegisterLazyFunc[T any](lifetime Lifetime, initializer Initializer[T], key ...KeyStringer) {
+// RegisterEagerSingleton Registers an eagerly instantiated singleton value
+func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
+	RegisterEagerSingletonToContainer[T](DefaultContainer, impl, key...)
+}
+
+// RegisterLazyFuncToContainer Registers a lazily initialized value to the given container using an `Initializer[T]` function signature
+func RegisterLazyFuncToContainer[T any](con *Container, lifetime Lifetime, initializer Initializer[T], key ...KeyStringer) {
 	if initializer == nil {
 		panic(nilVal[T]())
 	}
@@ -52,12 +62,17 @@ func RegisterLazyFunc[T any](lifetime Lifetime, initializer Initializer[T], key 
 		},
 		anonymousInitializer: &initializer,
 	}
-	appendToContainer[T](e, key)
+	addResolver[T](con, e, key...)
 }
 
-// RegisterAlias Registers an interface type to a concrete implementation.
+// RegisterLazyFunc Registers a lazily initialized value using an `Initializer[T]` function signature
+func RegisterLazyFunc[T any](lifetime Lifetime, initializer Initializer[T], key ...KeyStringer) {
+	RegisterLazyFuncToContainer(DefaultContainer, lifetime, initializer, key...)
+}
+
+// RegisterAliasToContainer Registers an interface type to a concrete implementation in the given container.
 // Allowing you to register the concrete implementation to the container and later get the interface from it.
-func RegisterAlias[TInterface, TImpl any]() {
+func RegisterAliasToContainer[TInterface, TImpl any](con *Container) {
 	interfaceType := reflect.TypeFor[TInterface]()
 	implType := reflect.TypeFor[TImpl]()
 
@@ -65,5 +80,11 @@ func RegisterAlias[TInterface, TImpl any]() {
 		panic(fmt.Errorf("%s does not implements %s", implType, interfaceType))
 	}
 
-	appendToAliases[TInterface, TImpl]()
+	addAliases[TInterface, TImpl](con)
+}
+
+// RegisterAlias Registers an interface type to a concrete implementation.
+// Allowing you to register the concrete implementation to the container and later get the interface from it.
+func RegisterAlias[TInterface, TImpl any]() {
+	RegisterAliasToContainer[TInterface, TImpl](DefaultContainer)
 }

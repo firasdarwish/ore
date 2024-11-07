@@ -3,16 +3,9 @@ package ore
 import (
 	"context"
 	"fmt"
-	"testing"
 )
 
 var types = []Lifetime{Singleton, Transient, Scoped}
-
-func mustHavePanicked(t *testing.T) {
-	if r := recover(); r == nil {
-		t.Errorf("Expected panic")
-	}
-}
 
 type someCounter interface {
 	AddOne()

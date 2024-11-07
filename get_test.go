@@ -51,8 +51,9 @@ func TestGetLatestByDefault(t *testing.T) {
 
 func TestGetPanicIfNoImplementations(t *testing.T) {
 	clearAll()
-	defer mustHavePanicked(t)
-	Get[someCounter](context.Background())
+	assert.Panics(t, func() {
+		Get[someCounter](context.Background())
+	})
 }
 
 func TestGetKeyed(t *testing.T) {

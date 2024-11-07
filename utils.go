@@ -9,7 +9,8 @@ type specialContextKey string
 
 type contextKey struct {
 	typeID
-	index int
+	containerID int32
+	index       int
 }
 type typeID struct {
 	pointerTypeName pointerTypeName
@@ -22,11 +23,14 @@ func isNil[T comparable](impl T) bool {
 	return impl == mock
 }
 
+func (this *Container) clearAll() {
+	this.resolvers = make(map[typeID][]serviceResolver)
+	this.aliases = make(map[pointerTypeName][]pointerTypeName)
+	this.isBuilt = false
+}
+
 func clearAll() {
-	container = make(map[typeID][]serviceResolver)
-	aliases = make(map[pointerTypeName][]pointerTypeName)
-	isBuilt = false
-	DisableValidation = false
+	DefaultContainer.clearAll()
 }
 
 // Get type name of *T.

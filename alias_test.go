@@ -135,14 +135,14 @@ func TestInvalidAlias(t *testing.T) {
 
 func TestGetGenericAlias(t *testing.T) {
 	for _, registrationType := range types {
-		clearAll()
+		container := NewContainer()
 
-		RegisterLazyFunc(registrationType, func(ctx context.Context) (*simpleCounterUint, context.Context) {
+		RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*simpleCounterUint, context.Context) {
 			return &simpleCounterUint{}, ctx
 		})
-		RegisterAlias[someCounterGeneric[uint], *simpleCounterUint]()
+		RegisterAliasToContainer[someCounterGeneric[uint], *simpleCounterUint](container)
 
-		c, _ := Get[someCounterGeneric[uint]](context.Background())
+		c, _ := GetFromContainer[someCounterGeneric[uint]](container, context.Background())
 
 		c.Add(1)
 		c.Add(1)
@@ -153,17 +153,17 @@ func TestGetGenericAlias(t *testing.T) {
 
 func TestGetListGenericAlias(t *testing.T) {
 	for _, registrationType := range types {
-		clearAll()
+		container := NewContainer()
 
 		for i := 0; i < 3; i++ {
-			RegisterLazyFunc(registrationType, func(ctx context.Context) (*simpleCounterUint, context.Context) {
+			RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*simpleCounterUint, context.Context) {
 				return &simpleCounterUint{}, ctx
 			})
 		}
 
-		RegisterAlias[someCounterGeneric[uint], *simpleCounterUint]()
+		RegisterAliasToContainer[someCounterGeneric[uint], *simpleCounterUint](container)
 
-		counters, _ := GetList[someCounterGeneric[uint]](context.Background())
+		counters, _ := GetListFromContainer[someCounterGeneric[uint]](container, context.Background())
 		assert.Equal(t, len(counters), 3)
 
 		c := counters[1]

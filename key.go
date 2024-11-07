@@ -12,7 +12,7 @@ type stringer interface {
 	String() string
 }
 
-func oreKey(key []KeyStringer) string {
+func oreKey(key ...KeyStringer) string {
 	if key == nil {
 		return ""
 	}

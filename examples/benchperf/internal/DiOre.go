@@ -6,47 +6,53 @@ import (
 	"github.com/firasdarwish/ore"
 )
 
-func BuildContainerOre() bool {
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (*A, context.Context) {
-		b, ctx := ore.Get[*B](ctx)
-		c, ctx := ore.Get[*C](ctx)
+func BuildContainerOre(disableValidation bool) *ore.Container {
+	container := ore.NewContainer()
+	RegisterToOreContainer(container)
+	container.DisableValidation = disableValidation
+	return container
+}
+
+func RegisterToOreContainer(container *ore.Container) {
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (*A, context.Context) {
+		b, ctx := ore.GetFromContainer[*B](container, ctx)
+		c, ctx := ore.GetFromContainer[*C](container, ctx)
 		return NewA(b, c), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (*B, context.Context) {
-		d, ctx := ore.Get[*D](ctx)
-		e, ctx := ore.Get[*E](ctx)
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (*B, context.Context) {
+		d, ctx := ore.GetFromContainer[*D](container, ctx)
+		e, ctx := ore.GetFromContainer[*E](container, ctx)
 		return NewB(d, e), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (*C, context.Context) {
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (*C, context.Context) {
 		return NewC(), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (*D, context.Context) {
-		f, ctx := ore.Get[*F](ctx)
-		h, ctx := ore.Get[H](ctx)
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (*D, context.Context) {
+		f, ctx := ore.GetFromContainer[*F](container, ctx)
+		h, ctx := ore.GetFromContainer[H](container, ctx)
 		return NewD(f, h), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (*E, context.Context) {
-		gs, ctx := ore.GetList[G](ctx)
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (*E, context.Context) {
+		gs, ctx := ore.GetListFromContainer[G](container, ctx)
 		return NewE(gs), ctx
 	})
-	ore.RegisterLazyFunc(ore.Singleton, func(ctx context.Context) (*F, context.Context) {
+	ore.RegisterLazyFuncToContainer(container, ore.Singleton, func(ctx context.Context) (*F, context.Context) {
 		return NewF(), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (*Ga, context.Context) {
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (*Ga, context.Context) {
 		return NewGa(), ctx
 	})
-	ore.RegisterLazyFunc(ore.Singleton, func(ctx context.Context) (G, context.Context) {
+	ore.RegisterLazyFuncToContainer(container, ore.Singleton, func(ctx context.Context) (G, context.Context) {
 		return NewGb(), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (G, context.Context) {
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (G, context.Context) {
 		return NewGc(), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (G, context.Context) {
-		ga, ctx := ore.Get[*Ga](ctx)
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (G, context.Context) {
+		ga, ctx := ore.GetFromContainer[*Ga](container, ctx)
 		return NewDGa(ga), ctx
 	})
-	ore.RegisterLazyFunc(ore.Transient, func(ctx context.Context) (H, context.Context) {
+	ore.RegisterLazyFuncToContainer(container, ore.Transient, func(ctx context.Context) (H, context.Context) {
 		return NewHr(), ctx
 	})
-	return true
 }

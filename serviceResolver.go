@@ -13,7 +13,7 @@ type (
 
 type serviceResolver interface {
 	fmt.Stringer
-	resolveService(ctx context.Context) (*concrete, context.Context)
+	resolveService(ctn *Container, ctx context.Context) (*concrete, context.Context)
 	//return the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
 	getInvokedSingleton() (con *concrete, isInvokedSingleton bool)
 }
@@ -57,7 +57,7 @@ type resolversStack = *list.List
 // make sure that the `serviceResolverImpl` struct implements the `serviceResolver` interface
 var _ serviceResolver = serviceResolverImpl[any]{}
 
-func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concrete, context.Context) {
+func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Context) (*concrete, context.Context) {
 	// try get concrete implementation
 	if this.lifetime == Singleton && this.singletonConcrete != nil {
 		return this.singletonConcrete, ctx
@@ -76,7 +76,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	// get the current currentStack from the context
 	var currentStack resolversStack
 	var marker *list.Element
-	if !isSealed && !DisableValidation {
+	if !ctn.isSealed && !ctn.DisableValidation {
 		untypedCurrentStack := ctx.Value(contextKeyResolversStack)
 		if untypedCurrentStack == nil {
 			currentStack = list.New()
@@ -100,7 +100,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	}
 
 	invocationLevel := 0
-	if !isSealed && !DisableValidation {
+	if !ctn.isSealed && !ctn.DisableValidation {
 		invocationLevel = currentStack.Len()
 
 		//the concreteValue is created, we must pop the current resolvers from the stack
@@ -125,7 +125,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	// to the service resolver
 	if this.lifetime == Singleton {
 		this.singletonConcrete = con
-		replaceServiceResolver(this)
+		replaceResolver(ctn, this)
 		return con, ctx
 	}
 

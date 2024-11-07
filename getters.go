@@ -5,11 +5,11 @@ import (
 	"sort"
 )
 
-func getLastRegisteredResolver(typeID typeID) serviceResolver {
+func (this *Container) getLastRegisteredResolver(typeID typeID) serviceResolver {
 	// try to get service resolver from container
-	lock.RLock()
-	resolvers, resolverExists := container[typeID]
-	lock.RUnlock()
+	this.lock.RLock()
+	resolvers, resolverExists := this.resolvers[typeID]
+	this.lock.RUnlock()
 
 	if !resolverExists {
 		return nil
@@ -26,16 +26,16 @@ func getLastRegisteredResolver(typeID typeID) serviceResolver {
 	return resolvers[lastIndex]
 }
 
-// Get Retrieves an instance based on type and key (panics if no valid implementations)
-func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
+// GetFromContainer Retrieves an instance from the given container based on type and key (panics if no valid implementations)
+func GetFromContainer[T any](con *Container, ctx context.Context, key ...KeyStringer) (T, context.Context) {
 	pointerTypeName := getPointerTypeName[T]()
-	typeID := getTypeID(pointerTypeName, key)
-	lastRegisteredResolver := getLastRegisteredResolver(typeID)
+	typeID := getTypeID(pointerTypeName, key...)
+	lastRegisteredResolver := con.getLastRegisteredResolver(typeID)
 	if lastRegisteredResolver == nil { //not found, T is an alias
 
-		lock.RLock()
-		implementations, implExists := aliases[pointerTypeName]
-		lock.RUnlock()
+		con.lock.RLock()
+		implementations, implExists := con.aliases[pointerTypeName]
+		con.lock.RUnlock()
 
 		if !implExists {
 			panic(noValidImplementation[T]())
@@ -46,8 +46,8 @@ func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
 		}
 		for i := count - 1; i >= 0; i-- {
 			impl := implementations[i]
-			typeID = getTypeID(impl, key)
-			lastRegisteredResolver = getLastRegisteredResolver(typeID)
+			typeID = getTypeID(impl, key...)
+			lastRegisteredResolver = con.getLastRegisteredResolver(typeID)
 			if lastRegisteredResolver != nil {
 				break
 			}
@@ -56,17 +56,22 @@ func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
 	if lastRegisteredResolver == nil {
 		panic(noValidImplementation[T]())
 	}
-	con, ctx := lastRegisteredResolver.resolveService(ctx)
-	return con.value.(T), ctx
+	concrete, ctx := lastRegisteredResolver.resolveService(con, ctx)
+	return concrete.value.(T), ctx
 }
 
-// GetList Retrieves a list of instances based on type and key
-func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
+// Get Retrieves an instance based on type and key (panics if no valid implementations)
+func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
+	return GetFromContainer[T](DefaultContainer, ctx, key...)
+}
+
+// GetListFromContainer Retrieves a list of instances from the given container based on type and key
+func GetListFromContainer[T any](con *Container, ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
 	inputPointerTypeName := getPointerTypeName[T]()
 
-	lock.RLock()
-	pointerTypeNames, implExists := aliases[inputPointerTypeName]
-	lock.RUnlock()
+	con.lock.RLock()
+	pointerTypeNames, implExists := con.aliases[inputPointerTypeName]
+	con.lock.RUnlock()
 
 	if implExists {
 		pointerTypeNames = append(pointerTypeNames, inputPointerTypeName)
@@ -79,12 +84,12 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 	for i := 0; i < len(pointerTypeNames); i++ {
 		pointerTypeName := pointerTypeNames[i]
 		// generate type identifier
-		typeID := getTypeID(pointerTypeName, key)
+		typeID := getTypeID(pointerTypeName, key...)
 
 		// try to get service resolver from container
-		lock.RLock()
-		resolvers, resolverExists := container[typeID]
-		lock.RUnlock()
+		con.lock.RLock()
+		resolvers, resolverExists := con.resolvers[typeID]
+		con.lock.RUnlock()
 
 		if !resolverExists {
 			continue
@@ -92,13 +97,41 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 
 		for index := 0; index < len(resolvers); index++ {
 			resolver := resolvers[index]
-			con, newCtx := resolver.resolveService(ctx)
+			con, newCtx := resolver.resolveService(con, ctx)
 			servicesArray = append(servicesArray, con.value.(T))
 			ctx = newCtx
 		}
 	}
 
 	return servicesArray, ctx
+}
+
+// GetList Retrieves a list of instances based on type and key
+func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
+	return GetListFromContainer[T](DefaultContainer, ctx, key...)
+}
+
+// GetResolvedSingletonsFromContainer retrieves a list of Singleton instances that implement the [TInterface] from the given container.
+// See [GetResolvedSingletons] for more information.
+func GetResolvedSingletonsFromContainer[TInterface any](con *Container) []TInterface {
+	con.lock.RLock()
+	defer con.lock.RUnlock()
+
+	list := []*concrete{}
+
+	//filtering
+	for _, resolvers := range con.resolvers {
+		for _, resolver := range resolvers {
+			con, isInvokedSingleton := resolver.getInvokedSingleton()
+			if isInvokedSingleton {
+				if _, ok := con.value.(TInterface); ok {
+					list = append(list, con)
+				}
+			}
+		}
+	}
+
+	return sortAndSelect[TInterface](list)
 }
 
 // GetResolvedSingletons retrieves a list of Singleton instances that implement the [TInterface].
@@ -114,24 +147,7 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 //		   disposable.Dispose()
 //		 }
 func GetResolvedSingletons[TInterface any]() []TInterface {
-	lock.RLock()
-	defer lock.RUnlock()
-
-	list := []*concrete{}
-
-	//filtering
-	for _, resolvers := range container {
-		for _, resolver := range resolvers {
-			con, isInvokedSingleton := resolver.getInvokedSingleton()
-			if isInvokedSingleton {
-				if _, ok := con.value.(TInterface); ok {
-					list = append(list, con)
-				}
-			}
-		}
-	}
-
-	return sortAndSelect[TInterface](list)
+	return GetResolvedSingletonsFromContainer[TInterface](DefaultContainer)
 }
 
 // GetResolvedScopedInstances retrieves a list of Scoped instances that implement the [TInterface].

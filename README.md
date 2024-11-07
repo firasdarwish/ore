@@ -18,7 +18,7 @@ the management of object lifetimes and the inversion of control in your applicat
 
 <br />
 
-# Features
+## Features
 
 - **Singletons**: Register components as singletons, ensuring that there's only one instance throughout the entire
   application.
@@ -46,7 +46,7 @@ the management of object lifetimes and the inversion of control in your applicat
 
 <br />
 
-# Installation
+## Installation
 
 ```bash
 go get -u github.com/firasdarwish/ore
@@ -54,7 +54,7 @@ go get -u github.com/firasdarwish/ore
 
 <br />
 
-# Usage
+## Usage
 
 ### Import
 
@@ -433,9 +433,49 @@ cancel() //cancel the ctx
 The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a list of implementations of the `[TInterface]` which are Scoped in the input context:
 
 - It returns only the instances which had been invoked (a.k.a resolved) during the context lifetime.
-- All the implementations including "keyed" one will be returned.
+- All the implementations (of all modules) including "keyed" one will be returned.
 - The returned instances are sorted by invocation order, the first one being the latest invoked one.
   - if "A" depends on "B", "C", Ore will make sure to return "B" and "C" first in the list so that they would be Disposed before "A".
+
+<br />
+
+### Multiple Containers (a.k.a Modules)
+
+| DefaultContainer | Custom container |
+|------------------|------------------|
+| Get | GetFromContainer |
+| GetList | GetListFromContainer |
+| GetResolvedSingletons | GetResolvedSingletonsFromContainer |
+| RegisterAlias | RegisterAliasToContainer |
+| RegisterEagerSingleton | RegisterEagerSingletonToContainer |
+| RegisterLazyCreator | RegisterLazyCreatorToContainer |
+| RegisterLazyFunc | RegisterLazyFuncToContainer |
+
+Most of time you only need the Default Container. In rare use case such as the Modular Monolith Architecture, you might want to use multiple containers, one per module. Ore provides minimum support for "module" in this case:
+
+```go
+//broker module
+brokerContainer := ore.NewContainer()
+ore.RegisterLazyFuncToContainer(brokerContainer, ore.Singleton, func(ctx context.Context) (*Broker, context.Context) {
+  brs, ctx = ore.GetFromContainer[*BrokerageSystem](brokerContainer, ctx)
+  return &Broker{brs}, ctx
+})
+// brokerContainer.Build() //prevent further registration
+// brokerContainer.Validate() //check the dependency graph
+// brokerContainer.DisableValidation = true //disable check when resolve new object
+broker, _ := ore.GetFromContainer[*Broker](brokerContainer, context.Background())
+
+//trader module
+traderContainer := ore.NewContainer()
+ore.RegisterLazyFuncToContainer(traderContainer, ore.Singleton, func(ctx context.Context) (*Trader, context.Context) {
+  mkp, ctx = ore.GetFromContainer[*MarketPlace](traderContainer, ctx)
+  return &Trader{mkp}, ctx
+})
+trader, _ := ore.GetFromContainer[*Trader](traderContainer, context.Background())
+```
+
+Important: You will have to prevent cross modules access to the containers by yourself. For eg, don't let your "Broker
+module" to have access to the `tranderContainer` of the "Trader module".
 
 <br />
 
@@ -488,7 +528,7 @@ func main() {
 
 <br />
 
-# Benchmarks
+## Benchmarks
 
 ```bash
 goos: windows
@@ -510,16 +550,16 @@ Checkout also [examples/benchperf/README.md](examples/benchperf/README.md)
 
 <br />
 
-# 👤 Contributors
+## 👤 Contributors
 
 ![Contributors](https://contrib.rocks/image?repo=firasdarwish/ore)
 
 
-# Contributing
+## Contributing
 
 Feel free to contribute by opening issues, suggesting features, or submitting pull requests. We welcome your feedback
 and contributions.
 
-# License
+## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
