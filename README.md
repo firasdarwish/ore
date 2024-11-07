@@ -334,7 +334,7 @@ option 1 (run `ore.Validate` on test) is often a better choice.
 `ore.Validate()` invokes ALL your registered resolvers, it panics when something gone wrong. The purpose of this function is to panic early when the Container is bad configured:
 
 - Missing depedency: you forgot to register certain resolvers.
-- Circular dependency: A depends on B whic depends on A.
+- Circular dependency: A depends on B which depends on A.
 - Lifetime misalignment: a longer lifetime service (eg. Singleton) depends on a shorter one (eg Transient).
 
 ### Graceful application termination

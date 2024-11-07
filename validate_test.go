@@ -153,44 +153,42 @@ func TestValidate_CircularMixedLifetype(t *testing.T) {
 	})
 }
 
-func TestValidate_LifetimeAlignment(t *testing.T) {
-	t.Run("Singleton depends on Scoped", func(t *testing.T) {
-		clearAll()
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
-			_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
-			return &m.DisposableService1{Name: "1"}, ctx
-		})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
-			return &m.DisposableService2{Name: "2"}, ctx
-		})
-		assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+func TestValidate_LifetimeAlignment_SingletonCallsScoped(t *testing.T) {
+	clearAll()
+	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
+		return &m.DisposableService1{Name: "1"}, ctx
 	})
-	t.Run("Scoped depends on Transient", func(t *testing.T) {
-		clearAll()
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
-			_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
-			return &m.DisposableService1{Name: "1"}, ctx
-		})
-		RegisterLazyFunc(Transient, func(ctx context.Context) (*m.DisposableService2, context.Context) {
-			return &m.DisposableService2{Name: "2"}, ctx
-		})
-		assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		return &m.DisposableService2{Name: "2"}, ctx
 	})
-	t.Run("Singleton depends on Transient", func(t *testing.T) {
-		clearAll()
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
-			_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
-			return &m.DisposableService1{Name: "1"}, ctx
-		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
-			_, ctx = Get[*m.DisposableService3](ctx) //2 depends on 3
-			return &m.DisposableService2{Name: "2"}, ctx
-		})
-		RegisterLazyFunc(Transient, func(ctx context.Context) (*m.DisposableService3, context.Context) {
-			return &m.DisposableService3{Name: "3"}, ctx
-		})
-		assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+}
+func TestValidate_LifetimeAlignment_ScopedCallsTransient(t *testing.T) {
+	clearAll()
+	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
+		return &m.DisposableService1{Name: "1"}, ctx
 	})
+	RegisterLazyFunc(Transient, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		return &m.DisposableService2{Name: "2"}, ctx
+	})
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+}
+func TestValidate_LifetimeAlignment_SingletonCallsTransient(t *testing.T) {
+	clearAll()
+	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
+		return &m.DisposableService1{Name: "1"}, ctx
+	})
+	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		_, ctx = Get[*m.DisposableService3](ctx) //2 depends on 3
+		return &m.DisposableService2{Name: "2"}, ctx
+	})
+	RegisterLazyFunc(Transient, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		return &m.DisposableService3{Name: "3"}, ctx
+	})
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
 }
 
 func TestValidate_MissingDependency(t *testing.T) {
@@ -210,3 +208,11 @@ func TestValidate_MissingDependency(t *testing.T) {
 	//forget to register 4
 	assert2.PanicsWithError(t, assert2.ErrorStartsWith("implementation not found for type"), Validate)
 }
+
+// func TestValidate_DisableValidation(t *testing.T) {
+// 	clearAll()
+// 	DisableValidation = true
+// 	assert.Panics(t, Validate)
+// 	DisableValidation = false
+// 	assert.NotPanics(t, Validate)
+// }

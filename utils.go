@@ -26,6 +26,7 @@ func clearAll() {
 	container = make(map[typeID][]serviceResolver)
 	aliases = make(map[pointerTypeName][]pointerTypeName)
 	isBuilt = false
+	DisableValidation = false
 }
 
 // Get type name of *T.

@@ -74,18 +74,21 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 
 	// get the current currentChain from the context
 	var currentChain resolversChain
-	untypedCurrentChain := ctx.Value(contextKeyResolversChain)
-	if untypedCurrentChain == nil {
-		currentChain = list.New()
-		ctx = context.WithValue(ctx, contextKeyResolversChain, currentChain)
-	} else {
-		currentChain = untypedCurrentChain.(resolversChain)
+	var marker *list.Element
+	if !DisableValidation {
+		untypedCurrentChain := ctx.Value(contextKeyResolversChain)
+		if untypedCurrentChain == nil {
+			currentChain = list.New()
+			ctx = context.WithValue(ctx, contextKeyResolversChain, currentChain)
+		} else {
+			currentChain = untypedCurrentChain.(resolversChain)
+		}
+
+		// push this newest resolver to the resolversChain
+		marker = appendResolver(currentChain, this.resolverMetadata)
 	}
-
-	// push this newest resolver to the resolversChain
-	marker := appendResolver(currentChain, this.resolverMetadata)
-
 	var concreteValue T
+	createdAt := time.Now()
 
 	// first, try make concrete implementation from `anonymousInitializer`
 	// if nil, try the concrete implementation `Creator`
@@ -95,15 +98,18 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 		concreteValue, ctx = this.creatorInstance.New(ctx)
 	}
 
-	invocationLevel := currentChain.Len()
+	invocationLevel := 0
+	if !DisableValidation {
+		invocationLevel = currentChain.Len()
 
-	// the concreteValue is created, we must to remove it from the resolversChain so that downstream resolvers (meaning the future resolvers) won't link to it
-	currentChain.Remove(marker)
+		// the concreteValue is created, we must to remove it from the resolversChain so that downstream resolvers (meaning the future resolvers) won't link to it
+		currentChain.Remove(marker)
+	}
 
 	con := &concrete{
 		value:           concreteValue,
 		lifetime:        this.lifetime,
-		createdAt:       time.Now(),
+		createdAt:       createdAt,
 		invocationLevel: invocationLevel,
 	}
 
@@ -166,3 +172,11 @@ func addToContextKeysRepository(ctx context.Context, newContextKey contextKey) c
 func (this resolverMetadata) String() string {
 	return fmt.Sprintf("Resolver(%s, type={%s}, key='%s')", this.lifetime, getUnderlyingTypeName(this.id.pointerTypeName), this.id.oreKey)
 }
+
+// func toString(resolversChain resolversChain) string {
+// 	var sb string
+// 	for e := resolversChain.Front(); e != nil; e = e.Next() {
+// 		sb = fmt.Sprintf("%s%s\n", sb, e.Value.(resolverMetadata).String())
+// 	}
+// 	return sb
+// }
