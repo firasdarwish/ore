@@ -1,7 +1,7 @@
 # Benchmark comparison
 
 This sample will compare Ore (current commit of Nov 2024) to [samber/do/v2 v2.0.0-beta.7](https://github.com/samber/do).
-We registered the below dependency graphs to both Ore and SamberDo, then ask them to create the concrete A.
+We registered the below dependency graphs to both Ore and SamberDo, then ask them to create the concrete `A`.
 
 We will only benchmark the creation, not the registration. Because registration usually happens only once on application startup =>
  not very interesting to benchmark.
@@ -9,8 +9,8 @@ We will only benchmark the creation, not the registration. Because registration 
 ## Data Model
 
 - This data model has only 2 singletons `F` and `Gb` => they will be created only once
-- Every other concrete are `Transient` => they will be created each time the container create a new `A`
-- We don't test the "Scoped" lifetime in this excercise because SamberDo doesn't has equivalent support for it. The "Scoped" functionality of SamberDo means "Sub Module" rather than a lifetime.
+- Other concretes are `Transient` => they will be created each time the container create a new `A` concrete.
+- We don't test the "Scoped" lifetime in this excercise because SamberDo doesn't have equivalent support for it. [The "Scoped" functionality of SamberDo](https://do.samber.dev/docs/container/scope) means "Sub Module" rather than a lifetime.
 
 ```mermaid
 flowchart TD

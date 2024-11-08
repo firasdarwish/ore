@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	//DisableValidation set to true to skip validation.
+	//DisableValidation is false by default, Set to true to skip validation.
 	// Use case: you called the [Validate] function (either in the test pipeline or on application startup).
 	// So you are confident that your registrations are good:
 	//
@@ -14,10 +14,11 @@ var (
 	//   - no circular dependencies
 	//   - no lifetime misalignment (a longer lifetime service depends on a shorter one).
 	//
-	// You don't need Ore to validate over and over again each time it creates a new concrete. It's just a waste of resource
-	// especially when you will need Ore to create milion of transient concretes and any "pico" seconds or memory allocation matter for you
+	// You don't need Ore to validate over and over again each time it creates a new concrete.
+	// It's a waste of resource especially when you will need Ore to create milion of transient concretes
+	// and any "pico" seconds or memory allocation matter for you.
 	//
-	// In this case, you can put DisableValidation to false.
+	// In this case, you can set DisableValidation = true.
 	//
 	// This config would impact also the the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
 	// the returning order would be no longer guaranteed.
@@ -31,8 +32,8 @@ var (
 
 	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
 	contextKeysRepositoryID specialContextKey = "The context keys repository"
-	//contextKeyResolversChain is a special context key. The value of this key is the [ResolversChain].
-	contextKeyResolversChain specialContextKey = "Dependencies chain"
+	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
+	contextKeyResolversStack specialContextKey = "Dependencies stack"
 )
 
 type contextKeysRepository = []contextKey

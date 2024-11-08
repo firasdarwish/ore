@@ -74,6 +74,14 @@ func TestGetKeyed(t *testing.T) {
 	}
 }
 
+func TestGetKeyedUnhashable(t *testing.T) {
+	RegisterLazyCreator(Singleton, &simpleCounter{}, "a")
+	_, _ = Get[someCounter](context.Background(), "a")
+
+	RegisterLazyCreator(Singleton, &simpleCounter{}, []string{"a", "b"})
+	_, _ = Get[someCounter](context.Background(), []string{"a", "b"})
+}
+
 func TestGetResolvedSingletons(t *testing.T) {
 	t.Run("When multiple lifetimes and keys are registered", func(t *testing.T) {
 		//Arrange

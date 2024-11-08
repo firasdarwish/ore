@@ -169,8 +169,8 @@ func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterfac
 func sortAndSelect[TInterface any](list []*concrete) []TInterface {
 	//sorting
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].createdAt.After(list[j].createdAt) ||
-			(list[i].createdAt == list[j].createdAt &&
+		return list[i].invocationTime.After(list[j].invocationTime) ||
+			(list[i].invocationTime == list[j].invocationTime &&
 				list[i].invocationLevel > list[j].invocationLevel)
 	})
 

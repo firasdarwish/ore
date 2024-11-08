@@ -32,9 +32,9 @@ func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
 			lifetime: Singleton,
 		},
 		singletonConcrete: &concrete{
-			value:     impl,
-			lifetime:  Singleton,
-			createdAt: time.Now(),
+			value:          impl,
+			lifetime:       Singleton,
+			invocationTime: time.Now(),
 		},
 	}
 	appendToContainer[T](e, key)
