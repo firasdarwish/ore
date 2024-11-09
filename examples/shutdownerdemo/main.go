@@ -44,6 +44,8 @@ func main() {
 	ore.RegisterEagerSingleton[*myGlobalRepo](&myGlobalRepo{})
 	ore.RegisterLazyCreator(ore.Scoped, &myScopedRepo{})
 
+	ore.Validate()
+
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 

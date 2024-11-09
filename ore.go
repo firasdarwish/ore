@@ -6,19 +6,34 @@ import (
 )
 
 var (
-	lock      = &sync.RWMutex{}
-	isBuilt   = false
-	container = map[typeID][]serviceResolver{}
+	//DisableValidation is false by default, Set to true to skip validation.
+	// Use case: you called the [Validate] function (either in the test pipeline or on application startup).
+	// So you are confident that your registrations are good:
+	//
+	//   - no missing dependencies
+	//   - no circular dependencies
+	//   - no lifetime misalignment (a longer lifetime service depends on a shorter one).
+	//
+	// You don't need Ore to validate over and over again each time it creates a new concrete.
+	// It's a waste of resource especially when you will need Ore to create milion of transient concretes
+	// and any "pico" seconds or memory allocation matter for you.
+	//
+	// In this case, you can set DisableValidation = true.
+	//
+	// This config would impact also the the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
+	// the returning order would be no longer guaranteed.
+	DisableValidation = false
+	lock              = &sync.RWMutex{}
+	isBuilt           = false
+	container         = map[typeID][]serviceResolver{}
 
 	//map the alias type (usually an interface) to the original types (usually implementations of the interface)
 	aliases = map[pointerTypeName][]pointerTypeName{}
 
 	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
-	contextKeysRepositoryID = contextKey{
-		typeID{
-			pointerTypeName: "",
-			oreKey:          "The context keys repository",
-		}, -1}
+	contextKeysRepositoryID specialContextKey = "The context keys repository"
+	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
+	contextKeyResolversStack specialContextKey = "Dependencies stack"
 )
 
 type contextKeysRepository = []contextKey
@@ -43,7 +58,7 @@ func typeIdentifier[T any](key []KeyStringer) typeID {
 }
 
 // Appends a service resolver to the container with type and key
-func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
+func appendToContainer[T any](resolver serviceResolverImpl[T], key []KeyStringer) {
 	if isBuilt {
 		panic(alreadyBuiltCannotAdd)
 	}
@@ -51,13 +66,14 @@ func appendToContainer[T any](resolver serviceResolver, key []KeyStringer) {
 	typeID := typeIdentifier[T](key)
 
 	lock.Lock()
+	resolver.id = contextKey{typeID, len(container[typeID])}
 	container[typeID] = append(container[typeID], resolver)
 	lock.Unlock()
 }
 
-func replaceServiceResolver(typeId typeID, index int, resolver serviceResolver) {
+func replaceServiceResolver[T any](resolver serviceResolverImpl[T]) {
 	lock.Lock()
-	container[typeId][index] = resolver
+	container[resolver.id.typeID][resolver.id.index] = resolver
 	lock.Unlock()
 }
 
@@ -83,4 +99,23 @@ func Build() {
 	}
 
 	isBuilt = true
+}
+
+// Validate invokes all registered resolvers. It panics if any of them fails.
+// It is recommended to call this function on application start, or in the CI/CD test pipeline
+// The objectif is to panic early when the container is bad configured. For eg:
+//
+//   - (1) Missing depedency (forget to register certain resolvers)
+//   - (2) cyclic dependency
+//   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
+func Validate() {
+	if DisableValidation {
+		panic("Validation is disabled")
+	}
+	ctx := context.Background()
+	for _, resolvers := range container {
+		for _, resolver := range resolvers {
+			_, ctx = resolver.resolveService(ctx)
+		}
+	}
 }

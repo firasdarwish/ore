@@ -321,6 +321,33 @@ func TestGetInterfaceAlias(t *testing.T) {
 
 Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[IPerson](ctx, "module1")` then Ore would return only Services registered under this key ("module1") and panic if no service found.
 
+### Registration validation
+
+Once finishing all your registrations, it is recommended to call `ore.Validate()`.
+
+`ore.Validate()` invokes ALL your registered resolvers. The purpose is to panic early if your registrations were in bad shape:
+
+- Missing depedency: you forgot to register certain resolvers.
+- Circular dependency: A depends on B which depends on A.
+- Lifetime misalignment: a longer lifetime service (eg. Singleton) depends on a shorter one (eg Transient).
+
+### Registration recommendation
+
+(1) You should call `ore.Validate()`
+  
+- either in a test which is automatically run on your CI/CD pipeline (option 1)
+- or on application start, just after all the registrations (option 2)
+
+option 1 (run `ore.Validate` on test) is usually a better choice.
+
+(2) It is recommended to build your container (which means register ALL the resolvers) only ONCE on application start => Please don't call `ore.RegisterXX` all over the place.
+  
+(3) Keep the object creation function (a.k.a resolvers) simple. Their only responsibility should be **object creation**.
+
+- they should not spawn new goroutine
+- they should not open database connection
+- they should not contain any "if" statement or other business logic
+
 ### Graceful application termination
 
 On application termination, you want to call `Shutdown()` on all the "Singletons" objects which have been created during the application life time.
@@ -337,13 +364,15 @@ ore.RegisterEagerSingleton(&Logger{}) //*Logger implements Shutdowner
 ore.RegisterEagerSingleton(&SomeRepository{}) //*SomeRepository implements Shutdowner
 ore.RegisterEagerSingleton(&SomeService{}, "some_module") //*SomeService implements Shutdowner
 
-//On application termination, Ore can help to retreive all the singletons implementation of the `Shutdowner` interface.
-//There might be other `Shutdowner`'s implementation which were lazily registered but have never been created (a.k.a invoked).
+//On application termination, Ore can help to retreive all the singletons implementation 
+//of the `Shutdowner` interface.
+//There might be other `Shutdowner`'s implementation which were lazily registered but 
+//have never been created.
 //Ore will ignore them, and return only the concrete instances which can be Shutdown()
 shutdowables := ore.GetResolvedSingletons[Shutdowner]() 
 
 //Now we can Shutdown() them all and gracefully terminate our application.
-//The most recently created instance will be Shutdown() first
+//The most recently invoked instance will be Shutdown() first
 for _, instance := range disposables {
    instance.Shutdown()
 }
@@ -353,7 +382,8 @@ In resume, the `ore.GetResolvedSingletons[TInterface]()` function returns a list
 
 - It  returns only the instances which had been invoked (a.k.a resolved).
 - All the implementations including "keyed" one will be returned.
-- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+- The returned instances are sorted by the invocation order, the first one being lastest invoked one.
+  - if "A" depends on "B", "C", Ore will make sure to return "B" and "C" first in the list so that they would be shutdowned before "A".
 
 ### Graceful context termination
 
@@ -377,7 +407,7 @@ go func() {
   <-ctx.Done() // Wait for the context to be canceled
   // Perform your cleanup tasks here
   disposables := ore.GetResolvedScopedInstances[Disposer](ctx)
-  //The most recently created instance will be Dispose() first
+  //The most recently invoked instance will be Dispose() first
   for _, d := range disposables {
     _ = d.Dispose(ctx)
   }
@@ -392,7 +422,8 @@ The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a lis
 
 - It  returns only the instances which had been invoked (a.k.a resolved) during the context life time.
 - All the implementations including "keyed" one will be returned.
-- The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
+- The returned instances are sorted by invocation order, the first one being the lastest invoked one.
+  - if "A" depends on "B", "C", Ore will make sure to return "B" and "C" first in the list so that they would be Disposed before "A".
 
 ## More Complex Example
 
@@ -461,6 +492,9 @@ BenchmarkGet-20                          3766730               321.9 ns/op
 BenchmarkGetList
 BenchmarkGetList-20                      1852132               637.0 ns/op
 ```
+
+Checkout also [examples/benchperf/README.md](examples/benchperf/README.md)
+
 
 # 👤 Contributors
 

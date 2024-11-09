@@ -50,3 +50,23 @@ func (*DisposableService4) Dispose() {}
 func (this *DisposableService4) String() string {
 	return this.Name
 }
+
+var _ Disposer = (*DisposableService5)(nil)
+
+type DisposableService5 struct {
+	Name string
+}
+
+func (*DisposableService5) Dispose() {}
+func (this *DisposableService5) String() string {
+	return this.Name
+}
+
+func FindIndexOf(disposables []Disposer, name string) int {
+	for i, disposable := range disposables {
+		if disposable.String() == name {
+			return i
+		}
+	}
+	return -1
+}
