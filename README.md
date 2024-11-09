@@ -283,8 +283,9 @@ func main() {
 }
 
 ```
+<br />
 
-### Alias: Register struct, get interface
+### Alias: Register `struct`, Get `interface`
 
 ```go
 type IPerson interface{}
@@ -321,36 +322,42 @@ func TestGetInterfaceAlias(t *testing.T) {
 
 Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[IPerson](ctx, "module1")` then Ore would return only Services registered under this key ("module1") and panic if no service found.
 
-### Registration validation
+<br />
 
-Once finishing all your registrations, it is recommended to call `ore.Validate()`.
+### Registration Validation
+
+Once you're done with registering all the services, it is recommended to call `ore.Validate()`.
 
 `ore.Validate()` invokes ALL your registered resolvers. The purpose is to panic early if your registrations were in bad shape:
 
-- Missing depedency: you forgot to register certain resolvers.
+- Missing dependency: you forgot to register certain resolvers.
 - Circular dependency: A depends on B which depends on A.
 - Lifetime misalignment: a longer lifetime service (eg. Singleton) depends on a shorter one (eg Transient).
 
-### Registration recommendation
+<br />
+
+### Registration Recommendation
 
 (1) You should call `ore.Validate()`
-  
-- either in a test which is automatically run on your CI/CD pipeline (option 1)
-- or on application start, just after all the registrations (option 2)
 
-option 1 (run `ore.Validate` on test) is usually a better choice.
+- In a test which is automatically run on your CI/CD pipeline (option 1)
+- On application start, right after all the registrations (option 2)
 
-(2) It is recommended to build your container (which means register ALL the resolvers) only ONCE on application start => Please don't call `ore.RegisterXX` all over the place.
-  
+Option 1 (run `ore.Validate` on test) is usually a better choice.
+
+(2) It is recommended to build your container `ore.Build()` (which seals the container) on application start => Please don't call `ore.RegisterXX` all over the place.
+
 (3) Keep the object creation function (a.k.a resolvers) simple. Their only responsibility should be **object creation**.
 
-- they should not spawn new goroutine
-- they should not open database connection
-- they should not contain any "if" statement or other business logic
+- They should not spawn new goroutine
+- They should not open database connection
+- They should not contain any "if" statement or other business logic
+
+<br />
 
 ### Graceful application termination
 
-On application termination, you want to call `Shutdown()` on all the "Singletons" objects which have been created during the application life time.
+On application termination, you want to call `Shutdown()` on all the "Singletons" objects which have been created during the application lifetime.
 
 Here how Ore can help you:
 
@@ -364,7 +371,7 @@ ore.RegisterEagerSingleton(&Logger{}) //*Logger implements Shutdowner
 ore.RegisterEagerSingleton(&SomeRepository{}) //*SomeRepository implements Shutdowner
 ore.RegisterEagerSingleton(&SomeService{}, "some_module") //*SomeService implements Shutdowner
 
-//On application termination, Ore can help to retreive all the singletons implementation 
+//On application termination, Ore can help to retrieve all the singletons implementation 
 //of the `Shutdowner` interface.
 //There might be other `Shutdowner`'s implementation which were lazily registered but 
 //have never been created.
@@ -380,20 +387,22 @@ for _, instance := range disposables {
 
 In resume, the `ore.GetResolvedSingletons[TInterface]()` function returns a list of Singleton implementations of the `[TInterface]`.
 
-- It  returns only the instances which had been invoked (a.k.a resolved).
-- All the implementations including "keyed" one will be returned.
-- The returned instances are sorted by the invocation order, the first one being lastest invoked one.
+- It returns only the instances which had been invoked (a.k.a resolved).
+- All the implementations (including "keyed" ones) will be returned.
+- The returned instances are sorted by the invocation order, the first one being latest invoked one.
   - if "A" depends on "B", "C", Ore will make sure to return "B" and "C" first in the list so that they would be shutdowned before "A".
+
+<br />
 
 ### Graceful context termination
 
-On context termination, you want to call `Dispose()` on all the "Scoped" objects which have been created during the context life time.
+On context termination, you want to call `Dispose()` on all the "Scoped" objects which have been created during the context lifetime.
 
 Here how Ore can help you:
 
 ```go
 //Assuming that your Application provides certain instances with Scoped lifetime.
-//Some of them implements a "Disposer" interface (defined winthin the application).
+//Some of them implements a "Disposer" interface (defined within the application).
 type Disposer interface {
   Dispose()
 }
@@ -420,10 +429,12 @@ cancel() //cancel the ctx
 
 The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a list of implementations of the `[TInterface]` which are Scoped in the input context:
 
-- It  returns only the instances which had been invoked (a.k.a resolved) during the context life time.
+- It returns only the instances which had been invoked (a.k.a resolved) during the context lifetime.
 - All the implementations including "keyed" one will be returned.
-- The returned instances are sorted by invocation order, the first one being the lastest invoked one.
+- The returned instances are sorted by invocation order, the first one being the latest invoked one.
   - if "A" depends on "B", "C", Ore will make sure to return "B" and "C" first in the list so that they would be Disposed before "A".
+
+<br />
 
 ## More Complex Example
 
@@ -495,6 +506,7 @@ BenchmarkGetList-20                      1852132               637.0 ns/op
 
 Checkout also [examples/benchperf/README.md](examples/benchperf/README.md)
 
+<br />
 
 # 👤 Contributors
 
