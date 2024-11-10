@@ -15,12 +15,12 @@ var (
 	//   - no lifetime misalignment (a longer lifetime service depends on a shorter one).
 	//
 	// You don't need Ore to validate over and over again each time it creates a new concrete.
-	// It's a waste of resource especially when you will need Ore to create milion of transient concretes
+	// It's a waste of resource especially when you will need Ore to create a million transient concretes
 	// and any "pico" seconds or memory allocation matter for you.
 	//
 	// In this case, you can set DisableValidation = true.
 	//
-	// This config would impact also the the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
+	// This config would impact also the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
 	// the returning order would be no longer guaranteed.
 	DisableValidation = false
 	lock              = &sync.RWMutex{}
@@ -31,9 +31,10 @@ var (
 	aliases = map[pointerTypeName][]pointerTypeName{}
 
 	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
-	contextKeysRepositoryID specialContextKey = "The context keys repository"
+	contextKeysRepositoryID specialContextKey = "__ORE_CONTEXT_KEY_REPO"
 	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
-	contextKeyResolversStack specialContextKey = "Dependencies stack"
+	contextKeyResolversStack specialContextKey = "__ORE_DEPENDENCIES_STACK"
+	contextCounterKey                          = "__ORE_COUNTER"
 )
 
 type contextKeysRepository = []contextKey
@@ -84,13 +85,13 @@ func appendToAliases[TInterface, TImpl any]() {
 		return
 	}
 	lock.Lock()
+	defer lock.Unlock()
 	for _, ot := range aliases[aliasType] {
 		if ot == originalType {
 			return //already registered
 		}
 	}
 	aliases[aliasType] = append(aliases[aliasType], originalType)
-	lock.Unlock()
 }
 
 func Build() {
@@ -103,9 +104,9 @@ func Build() {
 
 // Validate invokes all registered resolvers. It panics if any of them fails.
 // It is recommended to call this function on application start, or in the CI/CD test pipeline
-// The objectif is to panic early when the container is bad configured. For eg:
+// The objective is to panic early when the container is bad configured. For eg:
 //
-//   - (1) Missing depedency (forget to register certain resolvers)
+//   - (1) Missing dependency (forget to register certain resolvers)
 //   - (2) cyclic dependency
 //   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
 func Validate() {

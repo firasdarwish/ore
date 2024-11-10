@@ -254,7 +254,7 @@ func TestGetResolvedScopedInstances(t *testing.T) {
 		_, ctx = Get[*m.DisposableService2](ctx)
 
 		//Act
-		disposables := GetResolvedScopedInstances[m.Disposer](ctx) //B, A
+		disposables := GetResolvedScopedInstances[m.Disposer](ctx) //B, C, A
 
 		//Assert that the order is [B,C,A], the most recent invocation would be returned first
 		assert.Equal(t, 3, len(disposables))

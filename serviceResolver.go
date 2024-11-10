@@ -4,7 +4,7 @@ import (
 	"container/list"
 	"context"
 	"fmt"
-	"time"
+	"sync/atomic"
 )
 
 type (
@@ -88,10 +88,18 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 		// push the current resolver to the resolversStack
 		marker = pushToStack(currentStack, this.resolverMetadata)
 	}
-	var concreteValue T
-	invocationTime := time.Now()
 
-	// first, try make concrete implementation from `anonymousInitializer`
+	ctxCounter, ok := ctx.Value(contextCounterKey).(*atomic.Uint32)
+	if !ok {
+		ctxCounter = &atomic.Uint32{}
+		ctx = context.WithValue(ctx, contextCounterKey, ctxCounter)
+	}
+
+	invocationOrder := ctxCounter.Add(1)
+
+	var concreteValue T
+
+	// first, try to make concrete implementation from `anonymousInitializer`
 	// if nil, try the concrete implementation `Creator`
 	if this.anonymousInitializer != nil {
 		concreteValue, ctx = (*this.anonymousInitializer)(ctx)
@@ -103,7 +111,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	if !DisableValidation {
 		invocationLevel = currentStack.Len()
 
-		//the concreteValue is created, we must to pop the current resolvers from the stack
+		//the concreteValue is created, we must pop the current resolvers from the stack
 		//so that future resolvers won't link to it
 		currentStack.Remove(marker)
 	}
@@ -111,7 +119,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	con := &concrete{
 		value:           concreteValue,
 		lifetime:        this.lifetime,
-		invocationTime:  invocationTime,
+		invocationOrder: invocationOrder,
 		invocationLevel: invocationLevel,
 	}
 

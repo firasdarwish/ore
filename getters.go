@@ -74,7 +74,7 @@ func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Conte
 		pointerTypeNames = []pointerTypeName{inputPointerTypeName}
 	}
 
-	servicesArray := []T{}
+	var servicesArray []T
 
 	for i := 0; i < len(pointerTypeNames); i++ {
 		pointerTypeName := pointerTypeNames[i]
@@ -117,7 +117,7 @@ func GetResolvedSingletons[TInterface any]() []TInterface {
 	lock.RLock()
 	defer lock.RUnlock()
 
-	list := []*concrete{}
+	var list []*concrete
 
 	//filtering
 	for _, resolvers := range container {
@@ -152,7 +152,7 @@ func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterfac
 		return []TInterface{}
 	}
 
-	list := []*concrete{}
+	var list []*concrete
 
 	//filtering
 	for _, contextKey := range contextKeyRepository {
@@ -169,9 +169,8 @@ func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterfac
 func sortAndSelect[TInterface any](list []*concrete) []TInterface {
 	//sorting
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].invocationTime.After(list[j].invocationTime) ||
-			(list[i].invocationTime == list[j].invocationTime &&
-				list[i].invocationLevel > list[j].invocationLevel)
+		return list[i].invocationOrder > list[j].invocationOrder ||
+			(list[i].invocationOrder == list[j].invocationOrder && list[i].invocationLevel > list[j].invocationLevel)
 	})
 
 	//selecting

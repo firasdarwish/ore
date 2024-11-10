@@ -3,7 +3,6 @@ package ore
 import (
 	"fmt"
 	"reflect"
-	"time"
 )
 
 // RegisterLazyCreator Registers a lazily initialized value using a `Creator[T]` interface
@@ -32,9 +31,9 @@ func RegisterEagerSingleton[T comparable](impl T, key ...KeyStringer) {
 			lifetime: Singleton,
 		},
 		singletonConcrete: &concrete{
-			value:          impl,
-			lifetime:       Singleton,
-			invocationTime: time.Now(),
+			value:           impl,
+			lifetime:        Singleton,
+			invocationOrder: 0,
 		},
 	}
 	appendToContainer[T](e, key)
