@@ -105,6 +105,10 @@ func Build() {
 	isBuilt = true
 }
 
+func IsBuilt() bool {
+	return isBuilt
+}
+
 // Validate invokes all registered resolvers. It panics if any of them fails.
 // It is recommended to call this function on application start, or in the CI/CD test pipeline
 // The objective is to panic early when the container is bad configured. For eg:
