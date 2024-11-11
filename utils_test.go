@@ -2,6 +2,7 @@ package ore
 
 import (
 	"context"
+	"fmt"
 	"testing"
 )
 
@@ -77,6 +78,10 @@ func (c *counterGeneric[T]) New(ctx context.Context) (someCounterGeneric[T], con
 
 type c struct {
 	Counter int
+}
+
+func (this *c) String() string {
+	return fmt.Sprintf("Counter is: %v", this.Counter)
 }
 
 type a struct {
