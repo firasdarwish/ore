@@ -326,13 +326,13 @@ Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[
 
 ### Registration Validation
 
-Once you're done with registering all the services, it is recommended to call `ore.Validate()`.
+Once you're done with registering all the services, it is recommended to call `ore.Build()` AND `ore.Validate()`.
 
 `ore.Validate()` invokes ALL your registered resolvers. The purpose is to panic early if your registrations were in bad shape:
 
-- Missing dependency: you forgot to register certain resolvers.
-- Circular dependency: A depends on B which depends on A.
-- Lifetime misalignment: a longer lifetime service (eg. Singleton) depends on a shorter one (eg Transient).
+- Missing Dependency: you forgot to register certain resolvers.
+- Circular Dependency: A depends on B which depends on A.
+- Lifetime Misalignment: a longer lifetime service (eg. Singleton) depends on a shorter one (eg Transient).
 
 <br />
 
@@ -347,7 +347,10 @@ Option 1 (run `ore.Validate` on test) is usually a better choice.
 
 (2) It is recommended to build your container `ore.Build()` (which seals the container) on application start => Please don't call `ore.RegisterXX` all over the place.
 
-(3) Keep the object creation function (a.k.a resolvers) simple. Their only responsibility should be **object creation**.
+(3) A combination of `ore.Buile()` and then `ore.Validate()` ensures no more new resolvers will be registered AND all registered resolvers are validated, this will automatically 
+prevent any further validation each time a resolver is invoked (`ore.Get`) which greatly enhances performance.
+
+(4) Keep the object creation function (a.k.a resolvers) simple. Their only responsibility should be **object creation**.
 
 - They should not spawn new goroutine
 - They should not open database connection
