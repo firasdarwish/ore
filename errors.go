@@ -22,6 +22,14 @@ func cyclicDependency(resolver resolverMetadata) error {
 	return fmt.Errorf("detect cyclic dependency where: %s depends on itself", resolver)
 }
 
+func placeHolderValueNotProvided(resolver resolverMetadata) error {
+	return fmt.Errorf("No value has been provided for this place holder: %s", resolver)
+}
+
+func typeAlreadyRegistered(typeID typeID) error {
+	return fmt.Errorf("The type '%s' has already been registered (as a Resolver or as a Place Holder). Cannot override it with other Place Holder", typeID)
+}
+
 var alreadyBuilt = errors.New("services container is already built")
 var alreadyBuiltCannotAdd = errors.New("cannot appendToContainer, services container is already built")
 var nilKey = errors.New("cannot have nil keys")

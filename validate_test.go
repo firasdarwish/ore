@@ -154,41 +154,41 @@ func TestValidate_CircularMixedLifetype(t *testing.T) {
 }
 
 func TestValidate_LifetimeAlignment_SingletonCallsScoped(t *testing.T) {
-	clearAll()
-	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
-		_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
-		return &m.DisposableService1{Name: "1"}, ctx
-	})
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+	con := NewContainer()
+	RegisterLazyFuncToContainer(con, Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 		return &m.DisposableService2{Name: "2"}, ctx
 	})
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+	RegisterLazyFuncToContainer(con, Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		_, ctx = GetFromContainer[*m.DisposableService2](con, ctx) //1 depends on 2
+		return &m.DisposableService1{Name: "1"}, ctx
+	})
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
 }
 func TestValidate_LifetimeAlignment_ScopedCallsTransient(t *testing.T) {
-	clearAll()
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
-		_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
+	con := NewContainer()
+	RegisterLazyFuncToContainer(con, Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		_, ctx = GetFromContainer[*m.DisposableService2](con, ctx) //1 depends on 2
 		return &m.DisposableService1{Name: "1"}, ctx
 	})
-	RegisterLazyFunc(Transient, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+	RegisterLazyFuncToContainer(con, Transient, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 		return &m.DisposableService2{Name: "2"}, ctx
 	})
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
 }
 func TestValidate_LifetimeAlignment_SingletonCallsTransient(t *testing.T) {
-	clearAll()
-	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
-		_, ctx = Get[*m.DisposableService2](ctx) //1 depends on 2
+	con := NewContainer()
+	RegisterLazyFuncToContainer(con, Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		_, ctx = GetFromContainer[*m.DisposableService2](con, ctx) //1 depends on 2
 		return &m.DisposableService1{Name: "1"}, ctx
 	})
-	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
-		_, ctx = Get[*m.DisposableService3](ctx) //2 depends on 3
+	RegisterLazyFuncToContainer(con, Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		_, ctx = GetFromContainer[*m.DisposableService3](con, ctx) //2 depends on 3
 		return &m.DisposableService2{Name: "2"}, ctx
 	})
-	RegisterLazyFunc(Transient, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+	RegisterLazyFuncToContainer(con, Transient, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 		return &m.DisposableService3{Name: "3"}, ctx
 	})
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
 }
 
 func TestValidate_MissingDependency(t *testing.T) {
@@ -209,10 +209,25 @@ func TestValidate_MissingDependency(t *testing.T) {
 	assert2.PanicsWithError(t, assert2.ErrorStartsWith("implementation not found for type"), Validate)
 }
 
-// func TestValidate_DisableValidation(t *testing.T) {
-// 	clearAll()
-// 	DisableValidation = true
-// 	assert.Panics(t, Validate)
-// 	DisableValidation = false
-// 	assert.NotPanics(t, Validate)
-// }
+func TestValidate_WithPlaceHolder(t *testing.T) {
+	con := NewContainer()
+	RegisterPlaceHolderToContainer[*m.Trader](con)
+	assert.NotPanics(t, con.Validate)
+}
+
+func TestValidate_WithPlaceHolderInterface(t *testing.T) {
+	con := NewContainer()
+	RegisterPlaceHolderToContainer[m.IPerson](con)
+	assert.NotPanics(t, con.Validate)
+}
+
+func TestValidate_DisableValidation(t *testing.T) {
+	con := NewContainer()
+	RegisterPlaceHolderToContainer[*m.Trader](con)
+	RegisterLazyFuncToContainer(con, Singleton, func(ctx context.Context) (*m.Broker, context.Context) {
+		_, ctx = GetFromContainer[*m.Trader](con, ctx)
+		return &m.Broker{Name: "John"}, ctx
+	})
+
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
+}

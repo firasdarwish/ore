@@ -11,6 +11,10 @@ var (
 	contextKeysRepositoryID specialContextKey = "The context keys repository"
 	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
 	contextKeyResolversStack specialContextKey = "Dependencies stack"
+
+	//placeHolderResolverID is a special resolverID of every "placeHolder". "placeHolder" is a special resolver
+	//describing a "promise" for a concrete value, which will be provided in runtime.
+	placeHolderResolverID = -1
 )
 
 type contextKeysRepository = []contextKey
@@ -43,19 +47,28 @@ func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key ..
 	typeID := typeIdentifier[T](key...)
 
 	this.lock.Lock()
+	defer this.lock.Unlock()
+
+	resolverID := len(this.resolvers[typeID])
+	if resolver.isPlaceHolder() {
+		if resolverID > 0 {
+			panic(typeAlreadyRegistered(typeID))
+		}
+		resolverID = placeHolderResolverID
+	}
+
 	resolver.id = contextKey{
 		typeID:      typeID,
 		containerID: this.containerID,
-		index:       len(this.resolvers[typeID]),
+		resolverID:  resolverID,
 	}
 	this.resolvers[typeID] = append(this.resolvers[typeID], resolver)
-	this.lock.Unlock()
 }
 
 func replaceResolver[T any](this *Container, resolver serviceResolverImpl[T]) {
 	this.lock.Lock()
-	this.resolvers[resolver.id.typeID][resolver.id.index] = resolver
-	this.lock.Unlock()
+	defer this.lock.Unlock()
+	this.resolvers[resolver.id.typeID][resolver.id.resolverID] = resolver
 }
 
 func addAliases[TInterface, TImpl any](this *Container) {
@@ -65,13 +78,13 @@ func addAliases[TInterface, TImpl any](this *Container) {
 		return
 	}
 	this.lock.Lock()
+	defer this.lock.Unlock()
 	for _, ot := range this.aliases[aliasType] {
 		if ot == originalType {
 			return //already registered
 		}
 	}
 	this.aliases[aliasType] = append(this.aliases[aliasType], originalType)
-	this.lock.Unlock()
 }
 
 func Build() {

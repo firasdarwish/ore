@@ -8,21 +8,19 @@ import (
 )
 
 func main() {
-
 	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
-		return &counter{}, ctx
+		return &mycounter{}, ctx
 	}, "firas")
 
 	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
-		return &counter{}, ctx
+		return &mycounter{}, ctx
 	}, "darwish")
 
-	ore.RegisterLazyCreator[Counter](ore.Singleton, &counter{})
+	ore.RegisterLazyCreator[Counter](ore.Singleton, &mycounter{})
 
-	var cc Counter
-	cc = &counter{}
+	cc := &mycounter{}
 	ore.RegisterEagerSingleton[Counter](cc)
 
 	ctx := context.Background()
@@ -47,7 +45,7 @@ func main() {
 	gc.Add(1)
 	gc.Add(1)
 
-	gc, ctx = ore.Get[GenericCounter[uint]](ctx)
+	gc, _ = ore.Get[GenericCounter[uint]](ctx)
 	gc.Add(1)
 
 	fmt.Println(gc.Total())
@@ -61,4 +59,43 @@ type Counter interface {
 type GenericCounter[T numeric] interface {
 	Add(num T)
 	Total() T
+}
+
+type mycounter struct {
+	count int
+}
+
+var _ Counter = (*mycounter)(nil)
+
+func (c *mycounter) AddOne() {
+	c.count++
+}
+
+func (c *mycounter) Total() int {
+	return c.count
+}
+
+func (*mycounter) New(ctx context.Context) (Counter, context.Context) {
+	fmt.Println("NEWLY INITIALIZED")
+	return &mycounter{}, ctx
+}
+
+type numeric interface {
+	uint
+}
+
+type genCounter[T numeric] struct {
+	count T
+}
+
+func (t *genCounter[T]) Add(num T) {
+	t.count += num
+}
+
+func (t *genCounter[T]) Total() T {
+	return t.count
+}
+
+func (*genCounter[T]) New(ctx context.Context) (GenericCounter[T], context.Context) {
+	return &genCounter[T]{}, ctx
 }

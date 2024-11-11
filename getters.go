@@ -97,6 +97,11 @@ func GetListFromContainer[T any](con *Container, ctx context.Context, key ...Key
 
 		for index := 0; index < len(resolvers); index++ {
 			resolver := resolvers[index]
+			if resolver.isPlaceHolder() && !resolver.isScopedValueResolved(ctx) {
+				//the resolver is a placeHolder and the placeHolder's value has not been provided
+				//don't panic, just skip (don't add anything to the list)
+				continue
+			}
 			con, newCtx := resolver.resolveService(con, ctx)
 			servicesArray = append(servicesArray, con.value.(T))
 			ctx = newCtx

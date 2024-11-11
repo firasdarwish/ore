@@ -10,7 +10,7 @@ type specialContextKey string
 type contextKey struct {
 	typeID
 	containerID int32
-	index       int
+	resolverID  int
 }
 type typeID struct {
 	pointerTypeName pointerTypeName
@@ -47,4 +47,8 @@ func getUnderlyingTypeName(ptn pointerTypeName) string {
 		return s // no '*' found, return the original string
 	}
 	return s[:index] + s[index+1:]
+}
+
+func (this typeID) String() string {
+	return fmt.Sprintf("(name={%s}, key='%s')", getUnderlyingTypeName(this.pointerTypeName), this.oreKey)
 }

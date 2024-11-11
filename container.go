@@ -61,6 +61,17 @@ func (this *Container) Validate() {
 		panic("Validation is disabled")
 	}
 	ctx := context.Background()
+
+	//provide default value for all placeHolders
+	for _, resolvers := range this.resolvers {
+		for _, resolver := range resolvers {
+			if resolver.isPlaceHolder() {
+				ctx = resolver.providePlaceHolderDefaultValue(this, ctx)
+			}
+		}
+	}
+
+	//invoke all resolver to detect potential registration problem
 	for _, resolvers := range this.resolvers {
 		for _, resolver := range resolvers {
 			_, ctx = resolver.resolveService(this, ctx)

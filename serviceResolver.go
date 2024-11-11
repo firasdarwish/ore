@@ -14,8 +14,20 @@ type (
 type serviceResolver interface {
 	fmt.Stringer
 	resolveService(ctn *Container, ctx context.Context) (*concrete, context.Context)
-	//return the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
+
+	//getInvokedSingleton returns the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
 	getInvokedSingleton() (con *concrete, isInvokedSingleton bool)
+
+	//isPlaceHolder returns true if this resolver is a placeHolder.
+	//A placeHolder is a special Scoped resolver that doesn't have Creator or Factory (a.k.a anonymousInitializer) function
+	isPlaceHolder() bool
+
+	//providePlaceHolderDefaultValue provides a default value for a placeHolder for validation
+	providePlaceHolderDefaultValue(ctn *Container, ctx context.Context) context.Context
+
+	// isScopedValueResolved returns true if this resolver is a scoped resolver and the scoped value has been already resolved.
+	// in case this resolver is a placeHolder, then it returns true if the place holder value has been provided.
+	isScopedValueResolved(ctx context.Context) bool
 }
 
 type resolverMetadata struct {
@@ -63,7 +75,17 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 		return this.singletonConcrete, ctx
 	}
 
-	// try to get concrete from context scope
+	// get the currentStack from the context
+	var currentStack resolversStack
+	if !ctn.isSealed && !ctn.DisableValidation {
+		untypedCurrentStack := ctx.Value(contextKeyResolversStack)
+		if untypedCurrentStack != nil {
+			currentStack = untypedCurrentStack.(resolversStack)
+		}
+		validateLifetime(currentStack, this.resolverMetadata)
+	}
+
+	// try get concrete from context scope
 	if this.lifetime == Scoped {
 		scopedConcrete, ok := ctx.Value(this.id).(*concrete)
 		if ok {
@@ -71,20 +93,18 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 		}
 	}
 
+	if this.isPlaceHolder() {
+		panic(placeHolderValueNotProvided(this.resolverMetadata))
+	}
+
 	// this resolver is about to create a new concrete value, we have to put it to the resolversStack until the creation done
 
-	// get the current currentStack from the context
-	var currentStack resolversStack
 	var marker *list.Element
 	if !ctn.isSealed && !ctn.DisableValidation {
-		untypedCurrentStack := ctx.Value(contextKeyResolversStack)
-		if untypedCurrentStack == nil {
+		if currentStack == nil {
 			currentStack = list.New()
 			ctx = context.WithValue(ctx, contextKeyResolversStack, currentStack)
-		} else {
-			currentStack = untypedCurrentStack.(resolversStack)
 		}
-
 		// push the current resolver to the resolversStack
 		marker = pushToStack(currentStack, this.resolverMetadata)
 	}
@@ -117,8 +137,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 
 	// if scoped, attach to the current context
 	if this.lifetime == Scoped {
-		ctx = context.WithValue(ctx, this.id, con)
-		ctx = addToContextKeysRepository(ctx, this.id)
+		ctx = addScopedConcreteToContext(ctx, this.id, con)
 	}
 
 	// if was lazily-created, then attach the newly-created concrete implementation
@@ -136,13 +155,6 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 // `marker.previous` refers to the calling (parent) resolver
 func pushToStack(stack resolversStack, currentResolver resolverMetadata) (marker *list.Element) {
 	if stack.Len() != 0 {
-		//detect lifetime misalignment
-		lastElem := stack.Back()
-		lastResolver := lastElem.Value.(resolverMetadata)
-		if lastResolver.lifetime > currentResolver.lifetime {
-			panic(lifetimeMisalignment(lastResolver, currentResolver))
-		}
-
 		//detect cyclic dependencies
 		for e := stack.Back(); e != nil; e = e.Prev() {
 			if e.Value.(resolverMetadata).id == currentResolver.id {
@@ -152,6 +164,20 @@ func pushToStack(stack resolversStack, currentResolver resolverMetadata) (marker
 	}
 	marker = stack.PushBack(currentResolver) // `marker.previous` refers to the calling (parent) resolver
 	return marker
+}
+
+// validateLifetime checks the lifetime of the current resolver must not shorter
+// than the lifetime of the caller (a.k.a parent) resolver
+func validateLifetime(stack resolversStack, currentResolver resolverMetadata) {
+	if stack == nil || stack.Len() == 0 {
+		return
+	}
+	//detect lifetime misalignment
+	lastElem := stack.Back()
+	lastResolver := lastElem.Value.(resolverMetadata)
+	if lastResolver.lifetime > currentResolver.lifetime {
+		panic(lifetimeMisalignment(lastResolver, currentResolver))
+	}
 }
 
 func (this serviceResolverImpl[T]) getInvokedSingleton() (con *concrete, isInvokedSingleton bool) {
@@ -173,6 +199,33 @@ func addToContextKeysRepository(ctx context.Context, newContextKey contextKey) c
 
 func (this resolverMetadata) String() string {
 	return fmt.Sprintf("Resolver(%s, type={%s}, key='%s')", this.lifetime, getUnderlyingTypeName(this.id.pointerTypeName), this.id.oreKey)
+}
+
+func (this serviceResolverImpl[T]) isPlaceHolder() bool {
+	return this.lifetime == Scoped && this.anonymousInitializer == nil && this.creatorInstance == nil
+}
+
+func (this serviceResolverImpl[T]) providePlaceHolderDefaultValue(ctn *Container, ctx context.Context) context.Context {
+	defaultValue := *new(T)
+	concreteValue := &concrete{
+		value:           defaultValue,
+		lifetime:        Scoped,
+		invocationTime:  time.Now(),
+		invocationLevel: 0,
+	}
+	return addScopedConcreteToContext(ctx, this.id, concreteValue)
+}
+
+// isScopedValueResolved returns true if the scoped value has been already resolved.
+// we need this to know if the place holder value has been provided?
+func (this serviceResolverImpl[T]) isScopedValueResolved(ctx context.Context) bool {
+	return ctx.Value(this.id) != nil
+}
+
+func addScopedConcreteToContext(ctx context.Context, id contextKey, concrete *concrete) context.Context {
+	ctx = context.WithValue(ctx, id, concrete)
+	ctx = addToContextKeysRepository(ctx, id)
+	return ctx
 }
 
 // func toString(resolversStack resolversStack) string {
