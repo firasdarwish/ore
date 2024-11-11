@@ -98,6 +98,8 @@ func appendToAliases[TInterface, TImpl any]() {
 }
 
 func Build() {
+	lock.Lock()
+	defer lock.Unlock()
 	if isBuilt {
 		panic(alreadyBuilt)
 	}
@@ -128,8 +130,8 @@ func Validate() {
 	}
 
 	lock.Lock()
+	defer lock.Unlock()
 	if isBuilt && isSealed == false {
 		isSealed = true
 	}
-	lock.Unlock()
 }
