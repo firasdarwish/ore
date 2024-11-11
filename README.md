@@ -492,16 +492,15 @@ goos: windows
 goarch: amd64
 pkg: github.com/firasdarwish/ore
 cpu: 13th Gen Intel(R) Core(TM) i9-13900H
-BenchmarkRegisterLazyFunc
-BenchmarkRegisterLazyFunc-20             4953412               233.5 ns/op
-BenchmarkRegisterLazyCreator
-BenchmarkRegisterLazyCreator-20          5468863               231.3 ns/op
-BenchmarkRegisterEagerSingleton
-BenchmarkRegisterEagerSingleton-20       4634733               267.4 ns/op
-BenchmarkGet
-BenchmarkGet-20                          3766730               321.9 ns/op
-BenchmarkGetList
-BenchmarkGetList-20                      1852132               637.0 ns/op
+BenchmarkRegisterLazyFunc-20             5706694               196.9 ns/op
+BenchmarkRegisterLazyCreator-20          6283534               184.5 ns/op
+BenchmarkRegisterEagerSingleton-20       5146953               211.5 ns/op
+BenchmarkInitialGet-20                   3440072               352.1 ns/op
+BenchmarkGet-20                          9806043               121.8 ns/op
+BenchmarkInitialGetList-20               1601787               747.9 ns/op
+BenchmarkGetList-20                      4237449               282.1 ns/op
+PASS
+ok      github.com/firasdarwish/ore     11.427s
 ```
 
 Checkout also [examples/benchperf/README.md](examples/benchperf/README.md)

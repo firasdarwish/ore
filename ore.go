@@ -15,17 +15,21 @@ var (
 	//   - no lifetime misalignment (a longer lifetime service depends on a shorter one).
 	//
 	// You don't need Ore to validate over and over again each time it creates a new concrete.
-	// It's a waste of resource especially when you will need Ore to create milion of transient concretes
+	// It's a waste of resource especially when you will need Ore to create a million of transient concretes
 	// and any "pico" seconds or memory allocation matter for you.
 	//
 	// In this case, you can set DisableValidation = true.
 	//
-	// This config would impact also the the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
+	// This config would impact also the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
 	// the returning order would be no longer guaranteed.
 	DisableValidation = false
 	lock              = &sync.RWMutex{}
 	isBuilt           = false
-	container         = map[typeID][]serviceResolver{}
+
+	//isSealed will be set to `true` when `Validate()` is called AFTER `Build()` is called
+	//it prevents any further validations thus enhancing performance
+	isSealed  = false
+	container = map[typeID][]serviceResolver{}
 
 	//map the alias type (usually an interface) to the original types (usually implementations of the interface)
 	aliases = map[pointerTypeName][]pointerTypeName{}
@@ -103,9 +107,9 @@ func Build() {
 
 // Validate invokes all registered resolvers. It panics if any of them fails.
 // It is recommended to call this function on application start, or in the CI/CD test pipeline
-// The objectif is to panic early when the container is bad configured. For eg:
+// The objective is to panic early when the container is bad configured. For eg:
 //
-//   - (1) Missing depedency (forget to register certain resolvers)
+//   - (1) Missing dependency (forget to register certain resolvers)
 //   - (2) cyclic dependency
 //   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
 func Validate() {
@@ -118,4 +122,10 @@ func Validate() {
 			_, ctx = resolver.resolveService(ctx)
 		}
 	}
+
+	lock.Lock()
+	if isBuilt && isSealed == false {
+		isSealed = true
+	}
+	lock.Unlock()
 }

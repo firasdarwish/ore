@@ -33,7 +33,7 @@ type serviceResolverImpl[T any] struct {
 // resolversStack is a stack of [resolverMetadata], similar to a call stack describing How a resolver has
 // to call other resolvers to resolve its dependencies.
 // Before a resolver creates a new concrete value it would be registered (pushed) to the stack.
-// Once the concrete is resolved (with help of other resolvers), then it would be removed (poped) from the stack.
+// Once the concrete is resolved (with help of other resolvers), then it would be removed (popped) from the stack.
 //
 // While a Resolver forms a tree with other dependent resolvers.
 //
@@ -63,7 +63,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 		return this.singletonConcrete, ctx
 	}
 
-	// try get concrete from context scope
+	// try to get concrete from context scope
 	if this.lifetime == Scoped {
 		scopedConcrete, ok := ctx.Value(this.id).(*concrete)
 		if ok {
@@ -76,7 +76,7 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	// get the current currentStack from the context
 	var currentStack resolversStack
 	var marker *list.Element
-	if !DisableValidation {
+	if !isSealed && !DisableValidation {
 		untypedCurrentStack := ctx.Value(contextKeyResolversStack)
 		if untypedCurrentStack == nil {
 			currentStack = list.New()
@@ -100,10 +100,10 @@ func (this serviceResolverImpl[T]) resolveService(ctx context.Context) (*concret
 	}
 
 	invocationLevel := 0
-	if !DisableValidation {
+	if !isSealed && !DisableValidation {
 		invocationLevel = currentStack.Len()
 
-		//the concreteValue is created, we must to pop the current resolvers from the stack
+		//the concreteValue is created, we must pop the current resolvers from the stack
 		//so that future resolvers won't link to it
 		currentStack.Remove(marker)
 	}

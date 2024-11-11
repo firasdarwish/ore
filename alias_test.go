@@ -23,12 +23,12 @@ func TestAliasResolverConflict(t *testing.T) {
 	ctx := context.Background()
 
 	//The last registered IPerson is "Mary Transient", it would normally takes precedence.
-	//However we registered a direct resolver for IPerson which is "Peter Singleton".
+	//However, we registered a direct resolver for IPerson which is "Peter Singleton".
 	//So Ore won't treat IPerson as an alias and will resolve IPerson directly as "Peter Singleton"
 	person, ctx := Get[m.IPerson](ctx)
 	assert.Equal(t, person.(*m.Trader).Name, "Peter Singleton")
 
-	//GetlList will return all possible IPerson whatever alias or from direct resolver.
+	//GetList will return all possible IPerson whatever alias or from direct resolver.
 	personList, _ := GetList[m.IPerson](ctx)
 	assert.Equal(t, len(personList), 2)
 }
