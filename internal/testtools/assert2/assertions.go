@@ -4,6 +4,7 @@ package assert2
 import (
 	"fmt"
 	"runtime/debug"
+	"strings"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -37,19 +38,19 @@ func PanicsWithError(t assert.TestingT, errStringMatcher StringMatcher, f assert
 
 func ErrorStartsWith(prefix string) StringMatcher {
 	return func(s string) bool {
-		return s != "" && s[:len(prefix)] == prefix
+		return strings.HasPrefix(s, prefix)
 	}
 }
 
 func ErrorEndsWith(suffix string) StringMatcher {
 	return func(s string) bool {
-		return s != "" && s[len(s)-len(suffix):] == suffix
+		return strings.HasSuffix(s, suffix)
 	}
 }
 
 func ErrorContains(substr string) StringMatcher {
 	return func(s string) bool {
-		return s != "" && s[:len(substr)] == substr
+		return strings.Contains(s, substr)
 	}
 }
 

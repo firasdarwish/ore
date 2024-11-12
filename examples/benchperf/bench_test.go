@@ -9,23 +9,20 @@ import (
 	"github.com/samber/do/v2"
 )
 
-// func Benchmark_Ore_NoValidation(b *testing.B) {
-// 	i.BuildContainerOre()
-// 	ore.DisableValidation = true
-// 	ctx := context.Background()
-// 	b.ResetTimer()
-// 	for n := 0; n < b.N; n++ {
-// 		_, ctx = ore.Get[*i.A](ctx)
-// 	}
-// }
-
-var _ = i.BuildContainerOre()
+var container = i.BuildContainerOre(false)
+var unsafeContainer = i.BuildContainerOre(true)
 var injector = i.BuildContainerDo()
 var ctx = context.Background()
 
 func Benchmark_Ore(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		_, ctx = ore.Get[*i.A](ctx)
+		_, ctx = ore.GetFromContainer[*i.A](container, ctx)
+	}
+}
+
+func Benchmark_OreNoValidation(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		_, ctx = ore.GetFromContainer[*i.A](unsafeContainer, ctx)
 	}
 }
 

@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	i.BuildContainerOre()
+	i.RegisterToOreContainer(ore.DefaultContainer)
 	a1, _ := ore.Get[*i.A](context.Background())
 	log.Println(a1.ToString())
 	a2, _ := ore.Get[*i.A](context.Background())

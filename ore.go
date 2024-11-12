@@ -2,42 +2,19 @@ package ore
 
 import (
 	"context"
-	"sync"
 )
 
 var (
-	//DisableValidation is false by default, Set to true to skip validation.
-	// Use case: you called the [Validate] function (either in the test pipeline or on application startup).
-	// So you are confident that your registrations are good:
-	//
-	//   - no missing dependencies
-	//   - no circular dependencies
-	//   - no lifetime misalignment (a longer lifetime service depends on a shorter one).
-	//
-	// You don't need Ore to validate over and over again each time it creates a new concrete.
-	// It's a waste of resource especially when you will need Ore to create a million of transient concretes
-	// and any "pico" seconds or memory allocation matter for you.
-	//
-	// In this case, you can set DisableValidation = true.
-	//
-	// This config would impact also the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
-	// the returning order would be no longer guaranteed.
-	DisableValidation = false
-	lock              = &sync.RWMutex{}
-	isBuilt           = false
-
-	//isSealed will be set to `true` when `Validate()` is called AFTER `Build()` is called
-	//it prevents any further validations thus enhancing performance
-	isSealed  = false
-	container = map[typeID][]serviceResolver{}
-
-	//map the alias type (usually an interface) to the original types (usually implementations of the interface)
-	aliases = map[pointerTypeName][]pointerTypeName{}
+	DefaultContainer = NewContainer()
 
 	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
 	contextKeysRepositoryID specialContextKey = "The context keys repository"
 	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
 	contextKeyResolversStack specialContextKey = "Dependencies stack"
+
+	//placeHolderResolverID is a special resolverID of every "placeHolder". "placeHolder" is a special resolver
+	//describing a "promise" for a concrete value, which will be provided in runtime.
+	placeHolderResolverID = -1
 )
 
 type contextKeysRepository = []contextKey
@@ -47,68 +24,75 @@ type Creator[T any] interface {
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
-func getTypeID(pointerTypeName pointerTypeName, key []KeyStringer) typeID {
+func getTypeID(pointerTypeName pointerTypeName, key ...KeyStringer) typeID {
 	for _, stringer := range key {
 		if stringer == nil {
 			panic(nilKey)
 		}
 	}
-	return typeID{pointerTypeName, oreKey(key)}
+	return typeID{pointerTypeName, oreKey(key...)}
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
-func typeIdentifier[T any](key []KeyStringer) typeID {
-	return getTypeID(getPointerTypeName[T](), key)
+func typeIdentifier[T any](key ...KeyStringer) typeID {
+	return getTypeID(getPointerTypeName[T](), key...)
 }
 
 // Appends a service resolver to the container with type and key
-func appendToContainer[T any](resolver serviceResolverImpl[T], key []KeyStringer) {
-	if isBuilt {
+func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key ...KeyStringer) {
+	if this.isBuilt {
 		panic(alreadyBuiltCannotAdd)
 	}
 
-	typeID := typeIdentifier[T](key)
+	typeID := typeIdentifier[T](key...)
 
-	lock.Lock()
-	resolver.id = contextKey{typeID, len(container[typeID])}
-	container[typeID] = append(container[typeID], resolver)
-	lock.Unlock()
+	this.lock.Lock()
+	defer this.lock.Unlock()
+
+	resolverID := len(this.resolvers[typeID])
+	if resolver.isPlaceHolder() {
+		if resolverID > 0 {
+			panic(typeAlreadyRegistered(typeID))
+		}
+		resolverID = placeHolderResolverID
+	}
+
+	resolver.id = contextKey{
+		typeID:      typeID,
+		containerID: this.containerID,
+		resolverID:  resolverID,
+	}
+	this.resolvers[typeID] = append(this.resolvers[typeID], resolver)
 }
 
-func replaceServiceResolver[T any](resolver serviceResolverImpl[T]) {
-	lock.Lock()
-	container[resolver.id.typeID][resolver.id.index] = resolver
-	lock.Unlock()
+func replaceResolver[T any](this *Container, resolver serviceResolverImpl[T]) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	this.resolvers[resolver.id.typeID][resolver.id.resolverID] = resolver
 }
 
-func appendToAliases[TInterface, TImpl any]() {
+func addAliases[TInterface, TImpl any](this *Container) {
 	originalType := getPointerTypeName[TImpl]()
 	aliasType := getPointerTypeName[TInterface]()
 	if originalType == aliasType {
 		return
 	}
-	lock.Lock()
-	for _, ot := range aliases[aliasType] {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+	for _, ot := range this.aliases[aliasType] {
 		if ot == originalType {
 			return //already registered
 		}
 	}
-	aliases[aliasType] = append(aliases[aliasType], originalType)
-	lock.Unlock()
+	this.aliases[aliasType] = append(this.aliases[aliasType], originalType)
 }
 
 func Build() {
-	lock.Lock()
-	defer lock.Unlock()
-	if isBuilt {
-		panic(alreadyBuilt)
-	}
-
-	isBuilt = true
+	DefaultContainer.Build()
 }
 
 func IsBuilt() bool {
-	return isBuilt
+	return DefaultContainer.IsBuilt()
 }
 
 // Validate invokes all registered resolvers. It panics if any of them fails.
@@ -119,19 +103,5 @@ func IsBuilt() bool {
 //   - (2) cyclic dependency
 //   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
 func Validate() {
-	if DisableValidation {
-		panic("Validation is disabled")
-	}
-	ctx := context.Background()
-	for _, resolvers := range container {
-		for _, resolver := range resolvers {
-			_, ctx = resolver.resolveService(ctx)
-		}
-	}
-
-	lock.Lock()
-	defer lock.Unlock()
-	if isBuilt && isSealed == false {
-		isSealed = true
-	}
+	DefaultContainer.Validate()
 }

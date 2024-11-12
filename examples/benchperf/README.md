@@ -57,18 +57,18 @@ DGa -.implement..-> G
 On my machine, Ore always perform faster and use less memory than Samber/Do:
 
 ```text
-Benchmark_Ore-12                  415822              2565 ns/op            2089 B/op         57 allocs/op
-Benchmark_SamberDo-12             221941              4954 ns/op            2184 B/op         70 allocs/op
-```
-
-And with `ore.DisableValidation = true`
-
-```text
-Benchmark_Ore-12                  785088              1668 ns/op            1080 B/op         30 allocs/op
-Benchmark_SamberDo-12             227851              4940 ns/op            2184 B/op         70 allocs/op
+goos: linux
+goarch: amd64
+pkg: examples/benchperf
+cpu: 13th Gen Intel(R) Core(TM) i7-1365U
+Benchmark_Ore-12                          409480              2509 ns/op            2089 B/op         57 allocs/op
+Benchmark_OreNoValidation-12              671000              1699 ns/op            1080 B/op         30 allocs/op
+Benchmark_SamberDo-12                     218361              4825 ns/op            2184 B/op         70 allocs/op
+PASS
+ok      examples/benchperf      4.222s
 ```
 
 As any benchmarks, please take these number "relatively" as a general idea:
 
 - These numbers are probably outdated at the moment you are reading them
-- You might got a very different numbers when running them on your machine or on production machine.
+- You will get a very different numbers when running them on your machine or on production machine.
