@@ -75,6 +75,7 @@ func (this *Container) Validate() {
 	}
 }
 
+// Seal puts the container into read-only mode, preventing any further registrations.
 func (this *Container) Seal() {
 	this.lock.Lock()
 	defer this.lock.Unlock()
@@ -85,6 +86,7 @@ func (this *Container) Seal() {
 	this.isSealed = true
 }
 
+// IsSealed checks whether the container is sealed (in readonly mode)
 func (this *Container) IsSealed() bool {
 	return this.isSealed
 }

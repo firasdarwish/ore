@@ -87,12 +87,12 @@ func addAliases[TInterface, TImpl any](this *Container) {
 	this.aliases[aliasType] = append(this.aliases[aliasType], originalType)
 }
 
-// Seal puts the container into read-only mode, preventing any further registrations.
+// Seal puts the DEFAULT container into read-only mode, preventing any further registrations.
 func Seal() {
 	DefaultContainer.Seal()
 }
 
-// IsSealed checks whether the container is sealed (in readonly mode)
+// IsSealed checks whether the DEFAULT container is sealed (in readonly mode)
 func IsSealed() bool {
 	return DefaultContainer.IsSealed()
 }
