@@ -5,7 +5,8 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go?tab=readme-ov-file#dependency-injection)
 [![Maintainability](https://api.codeclimate.com/v1/badges/3bd6f2fa4390af7c8faa/maintainability)](https://codeclimate.com/github/firasdarwish/ore/maintainability)
 [![codecov](https://codecov.io/gh/firasdarwish/ore/graph/badge.svg?token=ISZVCCYGCR)](https://codecov.io/gh/firasdarwish/ore)
-
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore?ref=badge_shield&issueType=license)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore?ref=badge_shield&issueType=security)
 ![ore](https://github.com/firasdarwish/ore/assets/1930361/c1426ba1-777a-43f5-8a9a-7520caa45516)
 
 
