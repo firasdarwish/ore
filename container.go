@@ -25,12 +25,14 @@ type Container struct {
 	// the returning order would be no longer guaranteed.
 	DisableValidation bool
 	containerID       int32
-	lock              *sync.RWMutex
 	isSealed          bool
+	lock              *sync.RWMutex
 	resolvers         map[typeID][]serviceResolver
 
 	//map interface type to the implementations type
 	aliases map[pointerTypeName][]pointerTypeName
+
+	name string
 }
 
 var lastContainerID atomic.Int32
@@ -43,6 +45,30 @@ func NewContainer() *Container {
 		resolvers:   map[typeID][]serviceResolver{},
 		aliases:     map[pointerTypeName][]pointerTypeName{},
 	}
+}
+
+func (c *Container) ContainerID() int32 {
+	return c.containerID
+}
+
+func (c *Container) Name() string {
+	return c.name
+}
+
+func (this *Container) SetName(name string) {
+	if name == "" {
+		panic("container name can not be empty")
+	}
+
+	if this.name == name {
+		return
+	}
+
+	if this.name != "" {
+		panic("container name already set")
+	}
+
+	this.name = name
 }
 
 // Validate invokes all registered resolvers. It panics if any of them fails.

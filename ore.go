@@ -23,6 +23,10 @@ type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)
 }
 
+func init() {
+	DefaultContainer.SetName("DEFAULT")
+}
+
 // Generates a unique identifier for a service resolver based on type and key(s)
 func getTypeID(pointerTypeName pointerTypeName, key ...KeyStringer) typeID {
 	for _, stringer := range key {
@@ -106,4 +110,12 @@ func IsSealed() bool {
 //   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
 func Validate() {
 	DefaultContainer.Validate()
+}
+
+func ContainerID() int32 {
+	return DefaultContainer.containerID
+}
+
+func Name() string {
+	return DefaultContainer.name
 }
