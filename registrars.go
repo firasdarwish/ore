@@ -105,7 +105,7 @@ func RegisterPlaceHolderToContainer[T comparable](con *Container, key ...KeyStri
 	addResolver[T](con, e, key...)
 }
 
-// RegisterPlaceHolderToContainer registers a future value with Scoped lifetime.
+// RegisterPlaceHolder registers a future value with Scoped lifetime.
 // This value will be injected in runtime using the [ProvideScopedValue] function.
 // Resolving objects which depend on this value will panic if the value has not been provided.
 // Placeholder with the same type and key can be registered only once.
