@@ -26,7 +26,7 @@ func isNil[T comparable](impl T) bool {
 func (this *Container) clearAll() {
 	this.resolvers = make(map[typeID][]serviceResolver)
 	this.aliases = make(map[pointerTypeName][]pointerTypeName)
-	this.isBuilt = false
+	this.isSealed = false
 }
 
 func clearAll() {

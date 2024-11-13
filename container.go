@@ -26,7 +26,7 @@ type Container struct {
 	DisableValidation bool
 	containerID       int32
 	lock              *sync.RWMutex
-	isBuilt           bool
+	isSealed          bool
 	resolvers         map[typeID][]serviceResolver
 
 	//map interface type to the implementations type
@@ -39,7 +39,7 @@ func NewContainer() *Container {
 	return &Container{
 		containerID: lastContainerID.Add(1),
 		lock:        &sync.RWMutex{},
-		isBuilt:     false,
+		isSealed:    false,
 		resolvers:   map[typeID][]serviceResolver{},
 		aliases:     map[pointerTypeName][]pointerTypeName{},
 	}
@@ -75,16 +75,16 @@ func (this *Container) Validate() {
 	}
 }
 
-func (this *Container) Build() {
+func (this *Container) Seal() {
 	this.lock.Lock()
 	defer this.lock.Unlock()
-	if this.isBuilt {
+	if this.isSealed {
 		panic(alreadyBuilt)
 	}
 
-	this.isBuilt = true
+	this.isSealed = true
 }
 
-func (this *Container) IsBuilt() bool {
-	return this.isBuilt
+func (this *Container) IsSealed() bool {
+	return this.isSealed
 }

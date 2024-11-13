@@ -6,13 +6,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBuild(t *testing.T) {
+func TestSeal(t *testing.T) {
 	clearAll()
 	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
-	Build()
+	Seal()
 	assert.Panics(t, func() {
 		RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
 	})
+}
+
+func TestIsSeal(t *testing.T) {
+	clearAll()
+	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+	if got := IsSealed(); got != false {
+		t.Errorf("IsSealed() = %v; want %v", got, false)
+	}
+
+	Seal()
+
+	if got := IsSealed(); got != true {
+		t.Errorf("IsSealed() = %v; want %v", got, true)
+	}
 }
 
 type A1 struct{}

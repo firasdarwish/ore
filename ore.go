@@ -40,7 +40,7 @@ func typeIdentifier[T any](key ...KeyStringer) typeID {
 
 // Appends a service resolver to the container with type and key
 func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key ...KeyStringer) {
-	if this.isBuilt {
+	if this.isSealed {
 		panic(alreadyBuiltCannotAdd)
 	}
 
@@ -87,12 +87,14 @@ func addAliases[TInterface, TImpl any](this *Container) {
 	this.aliases[aliasType] = append(this.aliases[aliasType], originalType)
 }
 
-func Build() {
-	DefaultContainer.Build()
+// Seal puts the container into read-only mode, preventing any further registrations.
+func Seal() {
+	DefaultContainer.Seal()
 }
 
-func IsBuilt() bool {
-	return DefaultContainer.IsBuilt()
+// IsSealed checks whether the container is sealed (in readonly mode)
+func IsSealed() bool {
+	return DefaultContainer.IsSealed()
 }
 
 // Validate invokes all registered resolvers. It panics if any of them fails.

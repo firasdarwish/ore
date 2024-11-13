@@ -326,7 +326,7 @@ Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[
 
 ### Registration Validation
 
-Once you're done with registering all the services, it is recommended to call `ore.Build()`, then `ore.Validate()`, then finally `ore.DisableValidation=true`.
+Once you're done with registering all the services, it is recommended to call `ore.Seal()`, then `ore.Validate()`, then finally `ore.DisableValidation=true`.
 
 `ore.Validate()` invokes ALL your registered resolvers. The purpose is to panic early if your registrations were in bad shape:
 
@@ -345,7 +345,7 @@ Once you're done with registering all the services, it is recommended to call `o
 
 Option 1 (run `ore.Validate` on test) is usually a better choice.
 
-(2) It is recommended to build your container `ore.Build()` (which seals the container) on application start => Please don't call `ore.RegisterXX` all over the place.
+(2) It is recommended to seal your container `ore.Seal()` (which seals the container) on application start => Please don't call `ore.RegisterXX` all over the place.
 
 (3) A combination of `ore.Buile()` and then `ore.Validate()` and then `ore.DisabledValidation=true` ensures no more new resolvers will be registered AND all registered resolvers are validated, this will 
 prevent any further validation each time a resolver is invoked (`ore.Get`) which greatly enhances performance.
@@ -462,7 +462,7 @@ ore.RegisterLazyFuncToContainer(brokerContainer, ore.Singleton, func(ctx context
   brs, ctx = ore.GetFromContainer[*BrokerageSystem](brokerContainer, ctx)
   return &Broker{brs}, ctx
 })
-// brokerContainer.Build() //prevent further registration
+// brokerContainer.Seal() //prevent further registration
 // brokerContainer.Validate() //check the dependency graph
 // brokerContainer.DisableValidation = true //disable check when resolve new object
 broker, _ := ore.GetFromContainer[*Broker](brokerContainer, context.Background())
