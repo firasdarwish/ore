@@ -10,6 +10,10 @@ func noValidImplementation[T any]() error {
 	return fmt.Errorf("implementation not found for type: %s", reflect.TypeFor[T]())
 }
 
+func invalidKeyType(t reflect.Type) error {
+	return fmt.Errorf("cannot use type: `%s` as a key", t)
+}
+
 func nilVal[T any]() error {
 	return fmt.Errorf("nil implementation for type: %s", reflect.TypeFor[T]())
 }
