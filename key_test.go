@@ -5,6 +5,14 @@ import (
 	"testing"
 )
 
+func TestOreKeyEmptyVariadic(t *testing.T) {
+	k := oreKey()
+
+	if got := k; got != "" {
+		t.Errorf("got `%v`, expected `%v`", got, "")
+	}
+}
+
 func TestOreKeyNil(t *testing.T) {
 	k := oreKey(nil)
 
