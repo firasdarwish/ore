@@ -8,9 +8,9 @@ var (
 	DefaultContainer = NewContainer()
 
 	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
-	contextKeysRepositoryID specialContextKey = "The context keys repository"
+	contextKeysRepositoryID specialContextKey = "__ORE_CTX_KEYS_REPO"
 	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
-	contextKeyResolversStack specialContextKey = "Dependencies stack"
+	contextKeyResolversStack specialContextKey = "__ORE_DEP_STACK"
 
 	//placeHolderResolverID is a special resolverID of every "placeHolder". "placeHolder" is a special resolver
 	//describing a "promise" for a concrete value, which will be provided in runtime.
