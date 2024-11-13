@@ -3,6 +3,7 @@ package ore
 import (
 	"fmt"
 	"strings"
+	"sync/atomic"
 )
 
 type specialContextKey string
@@ -27,6 +28,9 @@ func (this *Container) clearAll() {
 	this.resolvers = make(map[typeID][]serviceResolver)
 	this.aliases = make(map[pointerTypeName][]pointerTypeName)
 	this.isSealed = false
+	this.DisableValidation = false
+	lastContainerID = atomic.Int32{}
+	lastContainerID.Add(1)
 }
 
 func clearAll() {
