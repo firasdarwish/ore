@@ -55,13 +55,13 @@ func (c *Container) Name() string {
 	return c.name
 }
 
-func (this *Container) SetName(name string) {
+func (this *Container) SetName(name string) *Container {
 	if name == "" {
 		panic("container name can not be empty")
 	}
 
 	if this.name == name {
-		return
+		return this
 	}
 
 	if this.name != "" {
@@ -69,6 +69,7 @@ func (this *Container) SetName(name string) {
 	}
 
 	this.name = name
+	return this
 }
 
 // Validate invokes all registered resolvers. It panics if any of them fails.
