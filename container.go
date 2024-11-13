@@ -21,17 +21,13 @@ type Container struct {
 	//
 	// In this case, you can set DisableValidation = true.
 	//
-	// This config would impact also the the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
+	// This config would impact also the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
 	// the returning order would be no longer guaranteed.
 	DisableValidation bool
 	containerID       int32
 	lock              *sync.RWMutex
 	isBuilt           bool
 	resolvers         map[typeID][]serviceResolver
-
-	//isSealed will be set to `true` when `Validate()` is called AFTER `Build()` is called
-	//it prevents any further validations thus enhancing performance
-	isSealed bool
 
 	//map interface type to the implementations type
 	aliases map[pointerTypeName][]pointerTypeName
@@ -76,12 +72,6 @@ func (this *Container) Validate() {
 		for _, resolver := range resolvers {
 			_, ctx = resolver.resolveService(this, ctx)
 		}
-	}
-
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	if this.isBuilt && this.isSealed == false {
-		this.isSealed = true
 	}
 }
 

@@ -26,7 +26,7 @@ type serviceResolver interface {
 	providePlaceHolderDefaultValue(ctn *Container, ctx context.Context) context.Context
 
 	// isScopedValueResolved returns true if this resolver is a scoped resolver and the scoped value has been already resolved.
-	// in case this resolver is a placeHolder, then it returns true if the place holder value has been provided.
+	// in case this resolver is a placeHolder, then it returns true if the placeholder value has been provided.
 	isScopedValueResolved(ctx context.Context) bool
 }
 
@@ -77,7 +77,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 
 	// get the currentStack from the context
 	var currentStack resolversStack
-	if !ctn.isSealed && !ctn.DisableValidation {
+	if !ctn.DisableValidation {
 		untypedCurrentStack := ctx.Value(contextKeyResolversStack)
 		if untypedCurrentStack != nil {
 			currentStack = untypedCurrentStack.(resolversStack)
@@ -100,7 +100,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 	// this resolver is about to create a new concrete value, we have to put it to the resolversStack until the creation done
 
 	var marker *list.Element
-	if !ctn.isSealed && !ctn.DisableValidation {
+	if !ctn.DisableValidation {
 		if currentStack == nil {
 			currentStack = list.New()
 			ctx = context.WithValue(ctx, contextKeyResolversStack, currentStack)
@@ -120,7 +120,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 	}
 
 	invocationLevel := 0
-	if !ctn.isSealed && !ctn.DisableValidation {
+	if !ctn.DisableValidation {
 		invocationLevel = currentStack.Len()
 
 		//the concreteValue is created, we must pop the current resolvers from the stack
@@ -217,7 +217,7 @@ func (this serviceResolverImpl[T]) providePlaceHolderDefaultValue(ctn *Container
 }
 
 // isScopedValueResolved returns true if the scoped value has been already resolved.
-// we need this to know if the place holder value has been provided?
+// we need this to know if the placeholder value has been provided?
 func (this serviceResolverImpl[T]) isScopedValueResolved(ctx context.Context) bool {
 	return ctx.Value(this.id) != nil
 }

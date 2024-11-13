@@ -16,7 +16,7 @@ func TestPlaceHolder_HappyPath(t *testing.T) {
 	RegisterPlaceHolder[*m.Trader]()
 
 	//get the placeHolder value would failed
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("No value has been provided for this place holder"), func() {
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("No value has been provided for this placeholder"), func() {
 		_, _ = Get[*m.Trader](context.Background())
 	})
 
@@ -31,7 +31,7 @@ func TestPlaceHolder_HappyPath(t *testing.T) {
 	trader, _ := Get[*m.Trader](ctx)
 	assert.Equal(t, "Peter", trader.Name)
 
-	//get list will include the place holder value
+	//get list will include the placeholder value
 	traders, ctx = GetList[*m.Trader](ctx)
 	assert.Equal(t, 1, len(traders))
 
@@ -42,7 +42,7 @@ func TestPlaceHolder_HappyPath(t *testing.T) {
 	person, ctx := Get[m.IPerson](ctx)
 	assert.Equal(t, "Peter", person.(*m.Trader).Name)
 
-	//get list will include the place holder value
+	//get list will include the placeholder value
 	persons, _ := GetList[m.IPerson](ctx)
 	assert.Equal(t, 1, len(persons))
 }
@@ -134,7 +134,7 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	assert.True(t, tradersListContainsName(traders, "Mary"))
 }
 
-// place holder value of a module is not accessible from other module
+// placeholder value of a module is not accessible from other module
 func TestPlaceHolder_PerModule(t *testing.T) {
 	con1 := NewContainer()
 	RegisterPlaceHolderToContainer[*m.Trader](con1)
@@ -146,7 +146,7 @@ func TestPlaceHolder_PerModule(t *testing.T) {
 	trader, ctx := GetFromContainer[*m.Trader](con1, ctx)
 	assert.Equal(t, "John", trader.Name)
 
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("No value has been provided for this place holder"), func() {
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("No value has been provided for this placeholder"), func() {
 		trader, ctx = GetFromContainer[*m.Trader](con2, ctx)
 	})
 }

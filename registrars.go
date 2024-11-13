@@ -115,7 +115,7 @@ func RegisterPlaceHolder[T comparable](key ...KeyStringer) {
 
 // ProvideScopedValueToContainer injects a concrete value into the given context.
 // This value will be available only to the given container. And the container can only resolve this value if
-// it has the matching (type and key's) Place holder registered. Checkout the [RegisterPlaceHolderToContainer] function for more info.
+// it has the matching (type and key's) Placeholder registered. Checkout the [RegisterPlaceHolderToContainer] function for more info.
 func ProvideScopedValueToContainer[T comparable](con *Container, ctx context.Context, value T, key ...KeyStringer) context.Context {
 	concreteValue := &concrete{
 		value:           value,
@@ -133,7 +133,7 @@ func ProvideScopedValueToContainer[T comparable](con *Container, ctx context.Con
 
 // ProvideScopedValue injects a concrete value into the given context.
 // This value will be available only to the default container. And the container can only resolve this value if
-// it has the matching (type and key's) Place holder registered. Checkout the [RegisterPlaceHolder] function for more info.
+// it has the matching (type and key's) Placeholder registered. Checkout the [RegisterPlaceHolder] function for more info.
 func ProvideScopedValue[T comparable](ctx context.Context, value T, key ...KeyStringer) context.Context {
 	return ProvideScopedValueToContainer[T](DefaultContainer, ctx, value, key...)
 }
