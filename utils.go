@@ -3,6 +3,7 @@ package ore
 import (
 	"fmt"
 	"strings"
+	"sync/atomic"
 )
 
 type specialContextKey string
@@ -26,7 +27,10 @@ func isNil[T comparable](impl T) bool {
 func (this *Container) clearAll() {
 	this.resolvers = make(map[typeID][]serviceResolver)
 	this.aliases = make(map[pointerTypeName][]pointerTypeName)
-	this.isBuilt = false
+	this.isSealed = false
+	this.DisableValidation = false
+	lastContainerID = atomic.Int32{}
+	lastContainerID.Add(1)
 }
 
 func clearAll() {

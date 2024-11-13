@@ -5,7 +5,8 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go?tab=readme-ov-file#dependency-injection)
 [![Maintainability](https://api.codeclimate.com/v1/badges/3bd6f2fa4390af7c8faa/maintainability)](https://codeclimate.com/github/firasdarwish/ore/maintainability)
 [![codecov](https://codecov.io/gh/firasdarwish/ore/graph/badge.svg?token=ISZVCCYGCR)](https://codecov.io/gh/firasdarwish/ore)
-
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore?ref=badge_shield&issueType=license)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Ffirasdarwish%2Fore?ref=badge_shield&issueType=security)
 ![ore](https://github.com/firasdarwish/ore/assets/1930361/c1426ba1-777a-43f5-8a9a-7520caa45516)
 
 
@@ -326,7 +327,7 @@ Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[
 
 ### Registration Validation
 
-Once you're done with registering all the services, it is recommended to call `ore.Build()` AND `ore.Validate()`.
+Once you're done with registering all the services, it is recommended to call `ore.Seal()`, then `ore.Validate()`, then finally `ore.DisableValidation=true`.
 
 `ore.Validate()` invokes ALL your registered resolvers. The purpose is to panic early if your registrations were in bad shape:
 
@@ -345,9 +346,9 @@ Once you're done with registering all the services, it is recommended to call `o
 
 Option 1 (run `ore.Validate` on test) is usually a better choice.
 
-(2) It is recommended to build your container `ore.Build()` (which seals the container) on application start => Please don't call `ore.RegisterXX` all over the place.
+(2) It is recommended to seal your container `ore.Seal()` (which seals the container) on application start => Please don't call `ore.RegisterXX` all over the place.
 
-(3) A combination of `ore.Buile()` and then `ore.Validate()` ensures no more new resolvers will be registered AND all registered resolvers are validated, this will automatically 
+(3) A combination of `ore.Buile()` and then `ore.Validate()` and then `ore.DisabledValidation=true` ensures no more new resolvers will be registered AND all registered resolvers are validated, this will 
 prevent any further validation each time a resolver is invoked (`ore.Get`) which greatly enhances performance.
 
 (4) Keep the object creation function (a.k.a resolvers) simple. Their only responsibility should be **object creation**.
@@ -462,7 +463,7 @@ ore.RegisterLazyFuncToContainer(brokerContainer, ore.Singleton, func(ctx context
   brs, ctx = ore.GetFromContainer[*BrokerageSystem](brokerContainer, ctx)
   return &Broker{brs}, ctx
 })
-// brokerContainer.Build() //prevent further registration
+// brokerContainer.Seal() //prevent further registration
 // brokerContainer.Validate() //check the dependency graph
 // brokerContainer.DisableValidation = true //disable check when resolve new object
 broker, _ := ore.GetFromContainer[*Broker](brokerContainer, context.Background())
@@ -483,7 +484,7 @@ module" to have access to the `traderContainer` of the "Trader module".
 
 ### Injecting value at Runtime
 
-A common scenario is that your "Service" depends on something which you couldn't provide on registration time. You can provide this dependency only when certain requests or events arrive later. Ore allows you to build an "incomplete" dependency graph using the "place holder".
+A common scenario is that your "Service" depends on something which you couldn't provide on registration time. You can provide this dependency only when certain requests or events arrive later. Ore allows you to build an "incomplete" dependency graph using the "placeholder".
 
 ```go
 //register SomeService which depends on "someConfig"
@@ -527,9 +528,9 @@ fmt.Println(service.someConfig) //"Admin config"
   - Resolving objects which depend on this value will panic if the value has not been provided.
 
 - `ore.ProvideScopedValue[T](context, value T, key...)` injects a concrete value into the given context
-  - `ore` can access (`Get()` or `GetList()`) to this value only if the corresponding place holder (which matches the type and keys) is registered.
+  - `ore` can access (`Get()` or `GetList()`) to this value only if the corresponding placeholder (which matches the type and keys) is registered.
 
-- A value provided to a place holder would never replace value returned by other resolvers. It's the opposite, if a type (and key) could be resolved by a real resolver (such as `RegisterLazyFunc`, `RegisterLazyCreator`...), then the later would take precedent.
+- A value provided to a placeholder would never replace value returned by other resolvers. It's the opposite, if a type (and key) could be resolved by a real resolver (such as `RegisterLazyFunc`, `RegisterLazyCreator`...), then the later would take precedent.
 
 <br/>
 

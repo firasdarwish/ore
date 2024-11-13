@@ -45,7 +45,7 @@ func BenchmarkInitialGet(b *testing.B) {
 
 	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
 
-	Build()
+	Seal()
 	Validate()
 
 	ctx := context.Background()
@@ -66,7 +66,7 @@ func BenchmarkGet(b *testing.B) {
 	RegisterEagerSingleton[someCounter](&simpleCounter{})
 
 	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
-	Build()
+	Seal()
 	Validate()
 	ctx := context.Background()
 
@@ -86,7 +86,7 @@ func BenchmarkInitialGetList(b *testing.B) {
 	RegisterEagerSingleton[someCounter](&simpleCounter{})
 
 	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
-	Build()
+	Seal()
 	Validate()
 
 	ctx := context.Background()
@@ -107,7 +107,7 @@ func BenchmarkGetList(b *testing.B) {
 	RegisterEagerSingleton[someCounter](&simpleCounter{})
 
 	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
-	Build()
+	Seal()
 	Validate()
 	ctx := context.Background()
 

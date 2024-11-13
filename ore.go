@@ -8,9 +8,9 @@ var (
 	DefaultContainer = NewContainer()
 
 	//contextKeysRepositoryID is a special context key. The value of this key is the collection of other context keys stored in the context.
-	contextKeysRepositoryID specialContextKey = "The context keys repository"
+	contextKeysRepositoryID specialContextKey = "__ORE_CTX_KEYS_REPO"
 	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
-	contextKeyResolversStack specialContextKey = "Dependencies stack"
+	contextKeyResolversStack specialContextKey = "__ORE_DEP_STACK"
 
 	//placeHolderResolverID is a special resolverID of every "placeHolder". "placeHolder" is a special resolver
 	//describing a "promise" for a concrete value, which will be provided in runtime.
@@ -21,6 +21,10 @@ type contextKeysRepository = []contextKey
 
 type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)
+}
+
+func init() {
+	DefaultContainer.SetName("DEFAULT")
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
@@ -40,7 +44,7 @@ func typeIdentifier[T any](key ...KeyStringer) typeID {
 
 // Appends a service resolver to the container with type and key
 func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key ...KeyStringer) {
-	if this.isBuilt {
+	if this.isSealed {
 		panic(alreadyBuiltCannotAdd)
 	}
 
@@ -87,12 +91,14 @@ func addAliases[TInterface, TImpl any](this *Container) {
 	this.aliases[aliasType] = append(this.aliases[aliasType], originalType)
 }
 
-func Build() {
-	DefaultContainer.Build()
+// Seal puts the DEFAULT container into read-only mode, preventing any further registrations.
+func Seal() {
+	DefaultContainer.Seal()
 }
 
-func IsBuilt() bool {
-	return DefaultContainer.IsBuilt()
+// IsSealed checks whether the DEFAULT container is sealed (in readonly mode)
+func IsSealed() bool {
+	return DefaultContainer.IsSealed()
 }
 
 // Validate invokes all registered resolvers. It panics if any of them fails.
@@ -104,4 +110,12 @@ func IsBuilt() bool {
 //   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
 func Validate() {
 	DefaultContainer.Validate()
+}
+
+func ContainerID() int32 {
+	return DefaultContainer.containerID
+}
+
+func Name() string {
+	return DefaultContainer.name
 }

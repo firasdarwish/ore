@@ -16,25 +16,23 @@ type Container struct {
 	//   - no lifetime misalignment (a longer lifetime service depends on a shorter one).
 	//
 	// You don't need Ore to validate over and over again each time it creates a new concrete.
-	// It's a waste of resource especially when you will need Ore to create milion of transient concretes
+	// It's a waste of resource especially when you will need Ore to create a million of transient concretes
 	// and any "pico" seconds or memory allocation matter for you.
 	//
 	// In this case, you can set DisableValidation = true.
 	//
-	// This config would impact also the the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
+	// This config would impact also the [GetResolvedSingletons] and the [GetResolvedScopedInstances] functions,
 	// the returning order would be no longer guaranteed.
 	DisableValidation bool
 	containerID       int32
+	isSealed          bool
 	lock              *sync.RWMutex
-	isBuilt           bool
 	resolvers         map[typeID][]serviceResolver
-
-	//isSealed will be set to `true` when `Validate()` is called AFTER `Build()` is called
-	//it prevents any further validations thus enhancing performance
-	isSealed bool
 
 	//map interface type to the implementations type
 	aliases map[pointerTypeName][]pointerTypeName
+
+	name string
 }
 
 var lastContainerID atomic.Int32
@@ -43,17 +41,42 @@ func NewContainer() *Container {
 	return &Container{
 		containerID: lastContainerID.Add(1),
 		lock:        &sync.RWMutex{},
-		isBuilt:     false,
+		isSealed:    false,
 		resolvers:   map[typeID][]serviceResolver{},
 		aliases:     map[pointerTypeName][]pointerTypeName{},
 	}
 }
 
+func (c *Container) ContainerID() int32 {
+	return c.containerID
+}
+
+func (c *Container) Name() string {
+	return c.name
+}
+
+func (this *Container) SetName(name string) *Container {
+	if name == "" {
+		panic("container name can not be empty")
+	}
+
+	if this.name == name {
+		return this
+	}
+
+	if this.name != "" {
+		panic("container name already set")
+	}
+
+	this.name = name
+	return this
+}
+
 // Validate invokes all registered resolvers. It panics if any of them fails.
 // It is recommended to call this function on application start, or in the CI/CD test pipeline
-// The objectif is to panic early when the container is bad configured. For eg:
+// The objective is to panic early when the container is bad configured. For eg:
 //
-//   - (1) Missing depedency (forget to register certain resolvers)
+//   - (1) Missing dependency (forget to register certain resolvers)
 //   - (2) cyclic dependency
 //   - (3) lifetime misalignment (a longer lifetime service depends on a shorter one).
 func (this *Container) Validate() {
@@ -77,24 +100,20 @@ func (this *Container) Validate() {
 			_, ctx = resolver.resolveService(this, ctx)
 		}
 	}
-
-	this.lock.Lock()
-	defer this.lock.Unlock()
-	if this.isBuilt && this.isSealed == false {
-		this.isSealed = true
-	}
 }
 
-func (this *Container) Build() {
+// Seal puts the container into read-only mode, preventing any further registrations.
+func (this *Container) Seal() {
 	this.lock.Lock()
 	defer this.lock.Unlock()
-	if this.isBuilt {
+	if this.isSealed {
 		panic(alreadyBuilt)
 	}
 
-	this.isBuilt = true
+	this.isSealed = true
 }
 
-func (this *Container) IsBuilt() bool {
-	return this.isBuilt
+// IsSealed checks whether the container is sealed (in readonly mode)
+func (this *Container) IsSealed() bool {
+	return this.isSealed
 }

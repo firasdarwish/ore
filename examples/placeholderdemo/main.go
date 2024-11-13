@@ -25,7 +25,7 @@ func main() {
 	ore.RegisterPlaceHolder[string]("someConfig")
 
 	//Seal registration, no further registration is allowed
-	ore.Build()
+	ore.Seal()
 	ore.Validate()
 
 	//a request arrive
