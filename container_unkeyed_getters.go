@@ -5,15 +5,16 @@ import (
 )
 
 // GetFromContainer Retrieves an instance from the given container based on type and key (panics if no valid implementations)
-func GetFromContainer[T any](con *Container, ctx context.Context, key ...KeyStringer) (T, context.Context) {
-	return getFromContainer[T](con, ctx, key...)
+func GetFromContainer[T any](con *Container, ctx context.Context) (T, context.Context) {
+	return getFromContainer[T](con, ctx)
 }
 
 // GetListFromContainer Retrieves a list of instances from the given container based on type and key
-func GetListFromContainer[T any](con *Container, ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
-	return getListFromContainer[T](con, ctx, key...)
+func GetListFromContainer[T any](con *Container, ctx context.Context) ([]T, context.Context) {
+	return getListFromContainer[T](con, ctx)
 }
 
+// TODO sep. to a file
 // GetResolvedSingletonsFromContainer retrieves a list of Singleton instances that implement the [TInterface] from the given container.
 // See [GetResolvedSingletons] for more information.
 func GetResolvedSingletonsFromContainer[TInterface any](con *Container) []TInterface {
