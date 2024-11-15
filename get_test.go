@@ -57,22 +57,66 @@ func TestGetPanicIfNoImplementations(t *testing.T) {
 	})
 }
 
-func TestGetKeyed(t *testing.T) {
-	for i, registrationType := range types {
-		clearAll()
+func TestGetKeyedSingleton(t *testing.T) {
+	clearAll()
 
-		key := fmt.Sprintf("keynum: %v", i)
+	//ctx := context.Background()
+	key := fmt.Sprintf("keynum: %v", Singleton)
 
-		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{}, key)
+	RegisterKeyedCreator[interfaces.SomeCounter](Singleton, &m.SimpleCounter{}, key)
 
-		c, _ := GetKeyed[interfaces.SomeCounter](context.Background(), key)
+	c, _ := GetKeyed[interfaces.SomeCounter](context.Background(), key)
+	c.AddOne()
+	c.AddOne()
 
-		c.AddOne()
-		c.AddOne()
+	c, _ = GetKeyedFromContainer[interfaces.SomeCounter](DefaultContainer, context.Background(), key)
+	c.AddOne()
+	c.AddOne()
 
-		if got := c.GetCount(); got != 2 {
-			t.Errorf("got %v, expected %v", got, 2)
-		}
+	if got := c.GetCount(); got != 4 {
+		t.Errorf("got %v, expected %v", got, 4)
+	}
+}
+
+func TestGetKeyedScoped(t *testing.T) {
+	clearAll()
+
+	ctx := context.Background()
+	key := fmt.Sprintf("keynum: %v", Scoped)
+
+	RegisterKeyedCreator[interfaces.SomeCounter](Scoped, &m.SimpleCounter{}, key)
+
+	c, ctx := GetKeyed[interfaces.SomeCounter](ctx, key)
+	c.AddOne()
+	c.AddOne()
+
+	c, ctx = GetKeyedFromContainer[interfaces.SomeCounter](DefaultContainer, ctx, key)
+	c.AddOne()
+	c.AddOne()
+
+	if got := c.GetCount(); got != 4 {
+		t.Errorf("got %v, expected %v", got, 4)
+	}
+}
+
+func TestGetKeyedTransient(t *testing.T) {
+	clearAll()
+
+	ctx := context.Background()
+	key := fmt.Sprintf("keynum: %v", Transient)
+
+	RegisterKeyedCreator[interfaces.SomeCounter](Transient, &m.SimpleCounter{}, key)
+
+	c, ctx := GetKeyed[interfaces.SomeCounter](ctx, key)
+	c.AddOne()
+	c.AddOne()
+
+	c, ctx = GetKeyedFromContainer[interfaces.SomeCounter](DefaultContainer, ctx, key)
+	c.AddOne()
+	c.AddOne()
+
+	if got := c.GetCount(); got != 2 {
+		t.Errorf("got %v, expected %v", got, 2)
 	}
 }
 

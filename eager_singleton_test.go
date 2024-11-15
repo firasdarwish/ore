@@ -13,8 +13,13 @@ func TestRegisterSingleton(t *testing.T) {
 	clearAll()
 
 	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
-
 	c, _ := Get[interfaces.SomeCounter](context.Background())
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+
+	RegisterSingletonToContainer[interfaces.SomeCounter](DefaultContainer, &models.SimpleCounter{})
+	c, _ = Get[interfaces.SomeCounter](context.Background())
 
 	c.AddOne()
 	c.AddOne()
@@ -49,14 +54,15 @@ func TestRegisterSingletonMultipleImplementationsKeyed(t *testing.T) {
 	clearAll()
 
 	RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
+	RegisterKeyedSingletonToContainer[interfaces.SomeCounter](DefaultContainer, &models.SimpleCounter{}, "firas")
 	RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
 
 	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
 	counters, _ := GetKeyedList[interfaces.SomeCounter](context.Background(), "firas")
 
-	if got := len(counters); got != 2 {
-		t.Errorf("got %v, expected %v", got, 2)
+	if got := len(counters); got != 3 {
+		t.Errorf("got %v, expected %v", got, 3)
 	}
 }
 

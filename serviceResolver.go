@@ -85,7 +85,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 		validateLifetime(currentStack, this.resolverMetadata)
 	}
 
-	// try get concrete from context scope
+	// try to get concrete from context scope
 	if this.lifetime == Scoped {
 		scopedConcrete, ok := ctx.Value(this.id).(*concrete)
 		if ok {
@@ -111,7 +111,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 	var concreteValue T
 	invocationTime := time.Now()
 
-	// first, try make concrete implementation from `anonymousInitializer`
+	// first, try to make concrete implementation from `anonymousInitializer`
 	// if nil, try the concrete implementation `Creator`
 	if this.anonymousInitializer != nil {
 		concreteValue, ctx = (*this.anonymousInitializer)(ctx)
