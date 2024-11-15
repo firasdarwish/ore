@@ -1,6 +1,7 @@
 package ore
 
 import (
+	"github.com/firasdarwish/ore/internal/models"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -107,19 +108,9 @@ func TestOreKeyFloat64(t *testing.T) {
 	}
 }
 
-func TestOreKeyStringer(t *testing.T) {
-	n := &c{
-		Counter: 16,
-	}
-
-	assert.Panics(t, func() {
-		oreKey(n)
-	})
-}
-
 func TestOreKeyStruct(t *testing.T) {
-	n := &simpleCounter{
-		counter: 17,
+	n := &models.SimpleCounter{
+		Counter: 17,
 	}
 
 	assert.Panics(t, func() {

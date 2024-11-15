@@ -86,7 +86,7 @@ func (c *simpleCounter) GetCount() int {
 }
 
 func (c *simpleCounter) New(ctx context.Context) (Counter, context.Context) {
-  return &simpleCounter{}, ctx
+  return &models.SimpleCounter{}, ctx
 }
 ```
 
@@ -95,27 +95,18 @@ func (c *simpleCounter) New(ctx context.Context) (Counter, context.Context) {
 ### Eager Singleton
 
 ```go
-package main
+var c Counter
+c = &models.SimpleCounter{}
 
-import (
-  "context"
-  "github.com/firasdarwish/ore"
-)
+// register
+ore.RegisterEagerSingleton[Counter](c)
 
-func main() {
-  var c Counter
-  c = &simpleCounter{}
+ctx := context.Background()
 
-  // register
-  ore.RegisterEagerSingleton[Counter](c)
-
-  ctx := context.Background()
-
-  // retrieve
-  c, ctx := ore.Get[Counter](ctx)
-  c.AddOne()
-  c.AddOne()
-}
+// retrieve
+c, ctx := ore.Get[Counter](ctx)
+c.AddOne()
+c.AddOne()
 ```
 
 <br />
@@ -123,36 +114,26 @@ func main() {
 ### Lazy (using Creator[T] interface)
 
 ```go
-package main
+// register
+ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{})
 
-import (
-  "context"
-  "fmt"
-  "github.com/firasdarwish/ore"
-)
+// OR
+//ore.RegisterLazyCreator[Counter](ore.Transient, &models.SimpleCounter{})
+//ore.RegisterLazyCreator[Counter](ore.Singleton, &models.SimpleCounter{})
 
-func main() {
-  // register
-  ore.RegisterLazyCreator[Counter](ore.Scoped, &simpleCounter{})
+ctx := context.Background()
 
-  // OR
-  //ore.RegisterLazyCreator[Counter](ore.Transient, &simpleCounter{})
-  //ore.RegisterLazyCreator[Counter](ore.Singleton, &simpleCounter{})
+// retrieve
+c, ctx := ore.Get[Counter](ctx)
+c.AddOne()
+c.AddOne()
 
-  ctx := context.Background()
+// retrieve again
+c, ctx = ore.Get[Counter](ctx)
+c.AddOne()
 
-  // retrieve
-  c, ctx := ore.Get[Counter](ctx)
-  c.AddOne()
-  c.AddOne()
-
-  // retrieve again
-  c, ctx = ore.Get[Counter](ctx)
-  c.AddOne()
-
-  // prints out: `TOTAL: 3`
-  fmt.Println("TOTAL: ", c.GetCount())
-}
+// prints out: `TOTAL: 3`
+fmt.Println("TOTAL: ", c.GetCount())
 ```
 
 <br />
@@ -160,47 +141,37 @@ func main() {
 ### Lazy (using anonymous func)
 
 ```go
-package main
-
-import (
-  "context"
-  "fmt"
-  "github.com/firasdarwish/ore"
-)
-
-func main() {
   // register
-  ore.RegisterLazyFunc[Counter](ore.Scoped, func(ctx context.Context) (Counter, context.Context) {
-    return &simpleCounter{}, ctx
-  })
+ore.RegisterLazyFunc[Counter](ore.Scoped, func(ctx context.Context) (Counter, context.Context) {
+    return &models.SimpleCounter{}, ctx
+})
 
-  // OR
-  //ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
-  //  return &simpleCounter{}, ctx
-  //})
+// OR
+//ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
+//  return &models.SimpleCounter{}, ctx
+//})
 
-  // Keyed service registration
-  //ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
-  // return &simpleCounter{}, ctx
-  //}, "name here", 1234)
+// Keyed service registration
+//ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+// return &models.SimpleCounter{}, ctx
+//}, "name here", 1234)
 
-  ctx := context.Background()
+ctx := context.Background()
 
-  // retrieve
-  c, ctx := ore.Get[Counter](ctx)
-  c.AddOne()
-  c.AddOne()
+// retrieve
+c, ctx := ore.Get[Counter](ctx)
+c.AddOne()
+c.AddOne()
 
-  // Keyed service retrieval
-  //c, ctx := ore.Get[Counter](ctx, "name here", 1234)
+// Keyed service retrieval
+//c, ctx := ore.Get[Counter](ctx, "name here", 1234)
 
-  // retrieve again
-  c, ctx = ore.Get[Counter](ctx)
-  c.AddOne()
+// retrieve again
+c, ctx = ore.Get[Counter](ctx)
+c.AddOne()
 
-  // prints out: `TOTAL: 3`
-  fmt.Println("TOTAL: ", c.GetCount())
-}
+// prints out: `TOTAL: 3`
+fmt.Println("TOTAL: ", c.GetCount())
 ```
 
 <br />
@@ -208,42 +179,32 @@ func main() {
 ### Several Implementations
 
 ```go
-package main
-
-import (
-  "context"
-  "github.com/firasdarwish/ore"
-)
-
-func main() {
   // register
-  ore.RegisterLazyCreator[Counter](ore.Scoped, &simpleCounter{})
+ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{})
 
-  ore.RegisterLazyCreator[Counter](ore.Scoped, &yetAnotherCounter{})
+ore.RegisterLazyCreator[Counter](ore.Scoped, &yetAnotherCounter{})
 
-  ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
-    return &simpleCounter{}, ctx
-  })
+ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
+    return &models.SimpleCounter{}, ctx
+})
 
-  ore.RegisterLazyCreator[Counter](ore.Singleton, &yetAnotherCounter{})
+ore.RegisterLazyCreator[Counter](ore.Singleton, &yetAnotherCounter{})
 
-  ctx := context.Background()
+ctx := context.Background()
 
-  // returns a slice of `Counter` implementations
-  counters, ctx := ore.GetList[Counter](ctx)
+// returns a slice of `Counter` implementations
+counters, ctx := ore.GetList[Counter](ctx)
 
-  // to retrieve a slice of keyed services
-  //counters, ctx := ore.GetList[Counter](ctx, "my integer counters")
+// to retrieve a slice of keyed services
+//counters, ctx := ore.GetList[Counter](ctx, "my integer counters")
 
-  for _, c := range counters {
+for _, c := range counters {
     c.AddOne()
-  }
-
-  // It will always return the LAST registered implementation
-  defaultImplementation, ctx := ore.Get[Counter](ctx) // simpleCounter
-  defaultImplementation.AddOne()
 }
 
+// It will always return the LAST registered implementation
+defaultImplementation, ctx := ore.Get[Counter](ctx) // simpleCounter
+defaultImplementation.AddOne()
 ```
 
 #### Injecting Mocks in Tests
@@ -255,34 +216,23 @@ The last registered implementation takes precedence, so you can register a mock 
 ### Keyed Services Retrieval Example
 
 ```go
-package main
-
-import (
-  "context"
-  "fmt"
-  "github.com/firasdarwish/ore"
-)
-
-func main() {
   // register
-  ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
-    return &simpleCounter{}, ctx
-  }, "name here", 1234)
+ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+    return &models.SimpleCounter{}, ctx
+}, "name here", 1234)
 
-  //ore.RegisterLazyCreator[Counter](ore.Scoped, &simpleCounter{}, "name here", 1234)
+//ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{}, "name here", 1234)
 
-  //ore.RegisterEagerSingleton[Counter](&simpleCounter{}, "name here", 1234)
+//ore.RegisterEagerSingleton[Counter](&models.SimpleCounter{}, "name here", 1234)
 
-  ctx := context.Background()
+ctx := context.Background()
 
-  // Keyed service retrieval
-  c, ctx := ore.Get[Counter](ctx, "name here", 1234)
-  c.AddOne()
+// Keyed service retrieval
+c, ctx := ore.Get[Counter](ctx, "name here", 1234)
+c.AddOne()
 
-  // prints out: `TOTAL: 1`
-  fmt.Println("TOTAL: ", c.GetCount())
-}
-
+// prints out: `TOTAL: 1`
+fmt.Println("TOTAL: ", c.GetCount())
 ```
 <br />
 
@@ -561,24 +511,14 @@ func (gc *genericCounter[T]) GetCount(ctx context.Context) T {
 ```
 
 ```go
-package main
 
-import (
-  "context"
-  "github.com/firasdarwish/ore"
-)
-
-func main() {
-
-  // register
-  ore.RegisterLazyFunc[GenericCounter[int]](ore.Scoped, func(ctx context.Context) (GenericCounter[int], context.Context) {
+// register
+ore.RegisterLazyFunc[GenericCounter[int]](ore.Scoped, func(ctx context.Context) (GenericCounter[int], context.Context) {
     return &genericCounter[int]{}, ctx
-  })
+})
 
-  // retrieve
-  c, ctx := ore.Get[GenericCounter[int]](ctx)
-}
-
+// retrieve
+c, ctx := ore.Get[GenericCounter[int]](ctx)
 ```
 
 <br />

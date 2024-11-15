@@ -27,6 +27,18 @@ jobs:
       - name: Test
         run: go test -v ./...
 
+      - name: Build all example projects
+        run: |
+          for dir in examples/*/; do
+            if [ -d "$dir" ]; then
+              echo "Building project in $dir"
+              cd "$dir" || exit 1
+              go mod tidy
+              go build -v . || exit 1
+              cd - || exit 1
+            fi
+          done
+
       - name: Run coverage
         run: go test -race -coverprofile=coverage.out -covermode=atomic
 
