@@ -7,8 +7,6 @@ import (
 	"github.com/firasdarwish/ore"
 )
 
-type UserRole struct {
-}
 type SomeService struct {
 	someConfig string
 }
@@ -16,13 +14,13 @@ type SomeService struct {
 func main() {
 	//register SomeService which depends on "someConfig"
 	ore.RegisterFunc[*SomeService](ore.Scoped, func(ctx context.Context) (*SomeService, context.Context) {
-		someConfig, ctx := ore.Get[string](ctx, "someConfig")
+		someConfig, ctx := ore.GetKeyed[string](ctx, "someConfig")
 		return &SomeService{someConfig}, ctx
 	})
 
-	//someConfig is unknow at registration time
+	//someConfig is unknown at registration time
 	//the value of "someConfig" depends on the future user's request
-	ore.RegisterPlaceholder[string]("someConfig")
+	ore.RegisterKeyedPlaceholder[string]("someConfig")
 
 	//Seal registration, no further registration is allowed
 	ore.Seal()
@@ -36,11 +34,11 @@ func main() {
 	//inject a different config depends on the request,
 	userRole := ctx.Value("role").(string)
 	if userRole == "admin" {
-		ctx = ore.ProvideScopedValue(ctx, "Admin config", "someConfig")
+		ctx = ore.ProvideKeyedScopedValue(ctx, "Admin config", "someConfig")
 	} else if userRole == "supervisor" {
-		ctx = ore.ProvideScopedValue(ctx, "Supervisor config", "someConfig")
+		ctx = ore.ProvideKeyedScopedValue(ctx, "Supervisor config", "someConfig")
 	} else if userRole == "user" {
-		ctx = ore.ProvideScopedValue(ctx, "Public user config", "someConfig")
+		ctx = ore.ProvideKeyedScopedValue(ctx, "Public user config", "someConfig")
 	}
 
 	service, _ := ore.Get[*SomeService](ctx)

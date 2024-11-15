@@ -8,12 +8,12 @@ import (
 )
 
 func main() {
-	ore.RegisterFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+	ore.RegisterKeyedFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
 		return &mycounter{}, ctx
 	}, "firas")
 
-	ore.RegisterFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+	ore.RegisterKeyedFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
 		return &mycounter{}, ctx
 	}, "darwish")
@@ -27,11 +27,11 @@ func main() {
 
 	fmt.Println("STARTED ...")
 
-	c, ctx := ore.Get[Counter](ctx, "firas")
+	c, ctx := ore.GetKeyed[Counter](ctx, "firas")
 	c.AddOne()
 	c.AddOne()
 
-	c, ctx = ore.Get[Counter](ctx, "darwish")
+	c, ctx = ore.GetKeyed[Counter](ctx, "darwish")
 	c.AddOne()
 	c.AddOne()
 
