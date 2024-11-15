@@ -21,6 +21,8 @@ var types = []Lifetime{Singleton, Transient, Scoped}
 
 type contextKeysRepository = []contextKey
 
+type KeyStringer any
+
 type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)
 }
@@ -31,7 +33,8 @@ func init() {
 
 // Generates a unique identifier for a service resolver based on type and key(s)
 func getTypeID(pointerTypeName pointerTypeName, key KeyStringer) typeID {
-	return typeID{pointerTypeName, oreKey(key)}
+	validateOreKeyType(key)
+	return typeID{pointerTypeName, key}
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)

@@ -14,7 +14,7 @@ type contextKey struct {
 }
 type typeID struct {
 	pointerTypeName pointerTypeName
-	oreKey          string
+	oreKey          KeyStringer
 }
 type pointerTypeName string
 
