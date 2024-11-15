@@ -27,7 +27,7 @@ func BenchmarkRegisterCreator(b *testing.B) {
 	}
 }
 
-func BenchmarkRegisterEagerSingleton(b *testing.B) {
+func BenchmarkRegisterSingleton(b *testing.B) {
 	clearAll()
 
 	b.ResetTimer()
@@ -70,6 +70,8 @@ func BenchmarkGet(b *testing.B) {
 	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
+	DefaultContainer.DisableValidation = true
+
 	ctx := context.Background()
 
 	b.ResetTimer()
@@ -111,6 +113,7 @@ func BenchmarkGetList(b *testing.B) {
 	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
+	DefaultContainer.DisableValidation = true
 	ctx := context.Background()
 
 	b.ResetTimer()

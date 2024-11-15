@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegisterEagerSingleton(t *testing.T) {
+func TestRegisterSingleton(t *testing.T) {
 	clearAll()
 
 	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
@@ -24,14 +24,14 @@ func TestRegisterEagerSingleton(t *testing.T) {
 	}
 }
 
-func TestRegisterEagerSingletonNilImplementation(t *testing.T) {
+func TestRegisterSingletonNilImplementation(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
 		RegisterSingleton[interfaces.SomeCounter](nil)
 	})
 }
 
-func TestRegisterEagerSingletonMultipleImplementations(t *testing.T) {
+func TestRegisterSingletonMultipleImplementations(t *testing.T) {
 	clearAll()
 
 	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
@@ -45,7 +45,7 @@ func TestRegisterEagerSingletonMultipleImplementations(t *testing.T) {
 	}
 }
 
-func TestRegisterEagerSingletonMultipleImplementationsKeyed(t *testing.T) {
+func TestRegisterSingletonMultipleImplementationsKeyed(t *testing.T) {
 	clearAll()
 
 	RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
@@ -60,7 +60,7 @@ func TestRegisterEagerSingletonMultipleImplementationsKeyed(t *testing.T) {
 	}
 }
 
-func TestRegisterEagerSingletonSingletonState(t *testing.T) {
+func TestRegisterSingletonSingletonState(t *testing.T) {
 	clearAll()
 
 	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
@@ -82,14 +82,14 @@ func TestRegisterEagerSingletonSingletonState(t *testing.T) {
 	}
 }
 
-func TestRegisterEagerSingletonNilKeyOnRegistering(t *testing.T) {
+func TestRegisterSingletonNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
 		RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, nil)
 	})
 }
 
-func TestRegisterEagerSingletonNilKeyOnGetting(t *testing.T) {
+func TestRegisterSingletonNilKeyOnGetting(t *testing.T) {
 	clearAll()
 	RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
 	assert.Panics(t, func() {
@@ -97,7 +97,7 @@ func TestRegisterEagerSingletonNilKeyOnGetting(t *testing.T) {
 	})
 }
 
-func TestRegisterEagerSingletonGeneric(t *testing.T) {
+func TestRegisterSingletonGeneric(t *testing.T) {
 	clearAll()
 
 	RegisterSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
@@ -112,7 +112,7 @@ func TestRegisterEagerSingletonGeneric(t *testing.T) {
 	}
 }
 
-func TestRegisterEagerSingletonMultipleGenericImplementations(t *testing.T) {
+func TestRegisterSingletonMultipleGenericImplementations(t *testing.T) {
 	clearAll()
 
 	RegisterSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
