@@ -18,11 +18,6 @@ type typeID struct {
 }
 type pointerTypeName string
 
-func isNil[T comparable](impl T) bool {
-	var mock T
-	return impl == mock
-}
-
 func (this *Container) clearAll() {
 	this.resolvers = make(map[typeID][]serviceResolver)
 	this.aliases = make(map[pointerTypeName][]pointerTypeName)

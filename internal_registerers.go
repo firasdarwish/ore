@@ -21,8 +21,11 @@ func registerCreatorToContainer[T any](con *Container, lifetime Lifetime, creato
 	addResolver[T](con, e, key)
 }
 
-func registerSingletonToContainer[T comparable](con *Container, impl T, key KeyStringer) {
-	if isNil[T](impl) {
+func registerSingletonToContainer[T any](con *Container, impl T, key KeyStringer) {
+	var mock any
+	mock = impl
+
+	if mock == nil {
 		panic(nilVal[T]())
 	}
 
@@ -64,7 +67,7 @@ func registerAliasToContainer[TInterface, TImpl any](con *Container) {
 	addAliases[TInterface, TImpl](con)
 }
 
-func registerPlaceholderToContainer[T comparable](con *Container, key KeyStringer) {
+func registerPlaceholderToContainer[T any](con *Container, key KeyStringer) {
 	e := serviceResolverImpl[T]{
 		resolverMetadata: resolverMetadata{
 			lifetime: Scoped,
@@ -73,7 +76,7 @@ func registerPlaceholderToContainer[T comparable](con *Container, key KeyStringe
 	addResolver[T](con, e, key)
 }
 
-func provideScopedValueToContainer[T comparable](con *Container, ctx context.Context, value T, key KeyStringer) context.Context {
+func provideScopedValueToContainer[T any](con *Container, ctx context.Context, value T, key KeyStringer) context.Context {
 	concreteValue := &concrete{
 		value:           value,
 		lifetime:        Scoped,
