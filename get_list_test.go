@@ -11,7 +11,7 @@ func TestGetList(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
 		counters, _ := GetList[interfaces.SomeCounter](context.Background())
 
@@ -35,12 +35,12 @@ func TestGetListKeyed(t *testing.T) {
 
 		key := "somekeyhere"
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "Firas")
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "Firas")
 
-		counters, _ := GetList[interfaces.SomeCounter](context.Background(), key)
+		counters, _ := GetKeyedList[interfaces.SomeCounter](context.Background(), key)
 		if got := len(counters); got != 3 {
 			t.Errorf("got %v, expected %v", got, 3)
 		}

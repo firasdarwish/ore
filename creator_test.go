@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegisterLazyCreator(t *testing.T) {
+func TestRegisterCreator(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
 		c, _ := Get[interfaces.SomeCounter](context.Background())
 
@@ -26,36 +26,36 @@ func TestRegisterLazyCreator(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyCreatorNilFuncTransient(t *testing.T) {
+func TestRegisterCreatorNilFuncTransient(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyCreator[interfaces.SomeCounter](Transient, nil)
+		RegisterCreator[interfaces.SomeCounter](Transient, nil)
 	})
 }
 
-func TestRegisterLazyCreatorNilFuncScoped(t *testing.T) {
+func TestRegisterCreatorNilFuncScoped(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyCreator[interfaces.SomeCounter](Scoped, nil)
+		RegisterCreator[interfaces.SomeCounter](Scoped, nil)
 	})
 }
 
-func TestRegisterLazyCreatorNilFuncSingleton(t *testing.T) {
+func TestRegisterCreatorNilFuncSingleton(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyCreator[interfaces.SomeCounter](Singleton, nil)
+		RegisterCreator[interfaces.SomeCounter](Singleton, nil)
 	})
 }
 
-func TestRegisterLazyCreatorMultipleImplementations(t *testing.T) {
+func TestRegisterCreatorMultipleImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
 		counters, _ := GetList[interfaces.SomeCounter](context.Background())
 
@@ -65,17 +65,17 @@ func TestRegisterLazyCreatorMultipleImplementations(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyCreatorMultipleImplementationsKeyed(t *testing.T) {
+func TestRegisterCreatorMultipleImplementationsKeyed(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
-		counters, _ := GetList[interfaces.SomeCounter](context.Background(), "firas")
+		counters, _ := GetKeyedList[interfaces.SomeCounter](context.Background(), "firas")
 
 		if got := len(counters); got != 2 {
 			t.Errorf("got %v, expected %v", got, 2)
@@ -83,12 +83,12 @@ func TestRegisterLazyCreatorMultipleImplementationsKeyed(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyCreatorSingletonState(t *testing.T) {
+func TestRegisterCreatorSingletonState(t *testing.T) {
 	var registrationType Lifetime = Singleton
 
 	clearAll()
 
-	RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
 	c, _ := Get[interfaces.SomeCounter](context.Background())
 	c.AddOne()
@@ -107,12 +107,12 @@ func TestRegisterLazyCreatorSingletonState(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyCreatorScopedState(t *testing.T) {
+func TestRegisterCreatorScopedState(t *testing.T) {
 	var registrationType Lifetime = Scoped
 
 	clearAll()
 
-	RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
 	ctx := context.Background()
 
@@ -133,12 +133,12 @@ func TestRegisterLazyCreatorScopedState(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyCreatorTransientState(t *testing.T) {
+func TestRegisterCreatorTransientState(t *testing.T) {
 	var registrationType Lifetime = Transient
 
 	clearAll()
 
-	RegisterLazyCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
 	ctx := context.Background()
 
@@ -159,26 +159,26 @@ func TestRegisterLazyCreatorTransientState(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyCreatorNilKeyOnRegistering(t *testing.T) {
+func TestRegisterCreatorNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, "", nil)
+		RegisterKeyedCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, nil)
 	})
 }
 
-func TestRegisterLazyCreatorNilKeyOnGetting(t *testing.T) {
+func TestRegisterCreatorNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, "firas")
+	RegisterKeyedCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, "firas")
 	assert.Panics(t, func() {
-		Get[interfaces.SomeCounter](context.Background(), nil)
+		GetKeyed[interfaces.SomeCounter](context.Background(), nil)
 	})
 }
 
-func TestRegisterLazyCreatorGeneric(t *testing.T) {
+func TestRegisterCreatorGeneric(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
+		RegisterCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
 
 		c, _ := Get[interfaces.SomeCounterGeneric[uint]](context.Background())
 
@@ -191,15 +191,15 @@ func TestRegisterLazyCreatorGeneric(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyCreatorMultipleGenericImplementations(t *testing.T) {
+func TestRegisterCreatorMultipleGenericImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
+		RegisterCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
 
-		RegisterLazyCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
+		RegisterCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
 
-		RegisterLazyCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
+		RegisterCreator[interfaces.SomeCounterGeneric[uint]](registrationType, &models.CounterGeneric[uint]{})
 
 		counters, _ := GetList[interfaces.SomeCounterGeneric[uint]](context.Background())
 

@@ -7,45 +7,45 @@ import (
 	"testing"
 )
 
-func BenchmarkRegisterLazyFunc(b *testing.B) {
+func BenchmarkRegisterFunc(b *testing.B) {
 	clearAll()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		})
 	}
 }
 
-func BenchmarkRegisterLazyCreator(b *testing.B) {
+func BenchmarkRegisterCreator(b *testing.B) {
 	clearAll()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	}
 }
 
-func BenchmarkRegisterEagerSingleton(b *testing.B) {
+func BenchmarkRegisterSingleton(b *testing.B) {
 	clearAll()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+		RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 	}
 }
 
 func BenchmarkInitialGet(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 
 	Seal()
 	Validate()
@@ -61,15 +61,17 @@ func BenchmarkInitialGet(b *testing.B) {
 func BenchmarkGet(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
+	DefaultContainer.DisableValidation = true
+
 	ctx := context.Background()
 
 	b.ResetTimer()
@@ -81,13 +83,13 @@ func BenchmarkGet(b *testing.B) {
 func BenchmarkInitialGetList(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
 
@@ -102,15 +104,16 @@ func BenchmarkInitialGetList(b *testing.B) {
 func BenchmarkGetList(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
+	DefaultContainer.DisableValidation = true
 	ctx := context.Background()
 
 	b.ResetTimer()

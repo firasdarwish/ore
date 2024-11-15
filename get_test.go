@@ -15,7 +15,7 @@ func TestGet(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{})
 
 		c, _ := Get[interfaces.SomeCounter](context.Background())
 
@@ -32,12 +32,12 @@ func TestGetLatestByDefault(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{})
 		c, _ := Get[interfaces.SomeCounter](context.Background())
 		c.AddOne()
 		c.AddOne()
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter2{})
+		RegisterCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter2{})
 		c, _ = Get[interfaces.SomeCounter](context.Background())
 		c.AddOne()
 		c.AddOne()
@@ -63,9 +63,9 @@ func TestGetKeyed(t *testing.T) {
 
 		key := fmt.Sprintf("keynum: %v", i)
 
-		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{}, key)
 
-		c, _ := Get[interfaces.SomeCounter](context.Background(), key)
+		c, _ := GetKeyed[interfaces.SomeCounter](context.Background(), key)
 
 		c.AddOne()
 		c.AddOne()
@@ -80,24 +80,24 @@ func TestGetResolvedSingletons(t *testing.T) {
 	t.Run("When multiple lifetimes and keys are registered", func(t *testing.T) {
 		//Arrange
 		clearAll()
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			return &m.DisposableService1{Name: "A1"}, ctx
 		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			return &m.DisposableService1{Name: "A2"}, ctx
 		})
-		RegisterEagerSingleton(&m.DisposableService2{Name: "E1"})
-		RegisterEagerSingleton(&m.DisposableService2{Name: "E2"})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		RegisterSingleton(&m.DisposableService2{Name: "E1"})
+		RegisterSingleton(&m.DisposableService2{Name: "E2"})
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 			return &m.DisposableService3{Name: "S1"}, ctx
 		})
-		RegisterLazyFunc(Transient, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		RegisterFunc(Transient, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 			return &m.DisposableService3{Name: "S2"}, ctx
 		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService4, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService4, context.Context) {
 			return &m.DisposableService4{Name: "X1"}, ctx
 		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService4, context.Context) {
+		RegisterKeyedFunc(Singleton, func(ctx context.Context) (*m.DisposableService4, context.Context) {
 			return &m.DisposableService4{Name: "X2"}, ctx
 		}, "somekey")
 
@@ -124,7 +124,7 @@ func TestGetResolvedSingletons(t *testing.T) {
 		assert.Equal(t, 5, len(disposables))
 
 		//invoke X2 in "somekey" scope
-		_, _ = GetList[fmt.Stringer](ctx, "somekey")
+		_, _ = GetKeyedList[fmt.Stringer](ctx, "somekey")
 
 		//Act
 		//all invoked singleton would be returned whatever keys they are registered with
@@ -135,13 +135,13 @@ func TestGetResolvedSingletons(t *testing.T) {
 	t.Run("respect invocation chronological time order", func(t *testing.T) {
 		//Arrange
 		clearAll()
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			return &m.DisposableService1{Name: "A"}, ctx
 		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 			return &m.DisposableService2{Name: "B"}, ctx
 		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 			return &m.DisposableService3{Name: "C"}, ctx
 		})
 
@@ -166,15 +166,15 @@ func TestGetResolvedSingletons(t *testing.T) {
 	t.Run("deeper invocation level is returned first", func(t *testing.T) {
 		//Arrange
 		clearAll()
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			_, ctx = Get[*m.DisposableService2](ctx) //1 calls 2
 			return &m.DisposableService1{Name: "1"}, ctx
 		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 			_, ctx = Get[*m.DisposableService3](ctx) //2 calls 3
 			return &m.DisposableService2{Name: "2"}, ctx
 		})
-		RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 			return &m.DisposableService3{Name: "3"}, ctx
 		})
 
@@ -195,11 +195,11 @@ func TestGetResolvedSingletons(t *testing.T) {
 func TestGetResolvedScopedInstances(t *testing.T) {
 	t.Run("When multiple lifetimes and keys are registered", func(t *testing.T) {
 		clearAll()
-		RegisterEagerSingleton(&m.DisposableService1{Name: "S1"})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		RegisterSingleton(&m.DisposableService1{Name: "S1"})
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			return &m.DisposableService1{Name: "S2"}, ctx
 		})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 			return &m.DisposableService2{Name: "T1"}, ctx
 		}, "module1")
 
@@ -218,7 +218,7 @@ func TestGetResolvedScopedInstances(t *testing.T) {
 		assert.Equal(t, "S2", disposables[0].String())
 
 		//invoke the keyed service T1
-		_, ctx = GetList[*m.DisposableService2](ctx, "module1")
+		_, ctx = GetKeyedList[*m.DisposableService2](ctx, "module1")
 
 		//Act
 		disposables = GetResolvedScopedInstances[m.Disposer](ctx) //S2, T1
@@ -228,13 +228,13 @@ func TestGetResolvedScopedInstances(t *testing.T) {
 	t.Run("respect invocation chronological time order", func(t *testing.T) {
 		//Arrange
 		clearAll()
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			return &m.DisposableService1{Name: "A"}, ctx
 		})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 			return &m.DisposableService2{Name: "B"}, ctx
 		})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 			return &m.DisposableService3{Name: "C"}, ctx
 		})
 
@@ -260,18 +260,18 @@ func TestGetResolvedScopedInstances(t *testing.T) {
 	t.Run("respect invocation deep level", func(t *testing.T) {
 		//Arrange
 		clearAll()
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			//1 calls 3
 			_, ctx = Get[*m.DisposableService3](ctx)
 			return &m.DisposableService1{Name: "1"}, ctx
 		})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 			return &m.DisposableService2{Name: "2"}, ctx
 		})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService3, context.Context) {
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 			return &m.DisposableService3{Name: "3"}, ctx
 		})
-		RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.DisposableService4, context.Context) {
+		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService4, context.Context) {
 			//4 calls 1, 2
 			_, ctx = Get[*m.DisposableService1](ctx)
 			_, ctx = Get[*m.DisposableService2](ctx)

@@ -41,8 +41,8 @@ func (*myScopedRepo) New(ctx context.Context) (*myScopedRepo, context.Context) {
 }
 
 func main() {
-	ore.RegisterEagerSingleton[*myGlobalRepo](&myGlobalRepo{})
-	ore.RegisterLazyCreator(ore.Scoped, &myScopedRepo{})
+	ore.RegisterSingleton[*myGlobalRepo](&myGlobalRepo{})
+	ore.RegisterCreator(ore.Scoped, &myScopedRepo{})
 
 	ore.Validate()
 

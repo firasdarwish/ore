@@ -3,32 +3,17 @@ package ore
 import (
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 type KeyStringer any
 
-func oreKey(key ...KeyStringer) string {
+func oreKey(key KeyStringer) string {
 	if key == nil {
-		return ""
+		return "n"
 	}
 
-	l := len(key)
-
-	if l == 1 {
-		keyT, kV := stringifyOreKey(key[0])
-		return keyT + kV
-	}
-
-	var sb strings.Builder
-
-	for _, s := range key {
-		keyT, keyV := stringifyOreKey(s)
-		sb.WriteString(keyT)
-		sb.WriteString(keyV)
-	}
-
-	return sb.String()
+	keyT, kV := stringifyOreKey(key)
+	return keyT + kV
 }
 
 func stringifyOreKey(key KeyStringer) (string, string) {
