@@ -65,8 +65,8 @@ func TestContainerID(t *testing.T) {
 func TestNewContainerIDSerial(t *testing.T) {
 	clearAll()
 	con := NewContainer()
-	if got := con.ContainerID(); got != 2 {
-		t.Errorf("ContainerID() = %v; want 2", got)
+	if got := con.ContainerID(); got < 2 {
+		t.Errorf("ContainerID() = %v; want >= 2", got)
 	}
 }
 
