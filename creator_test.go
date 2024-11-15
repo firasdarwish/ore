@@ -70,15 +70,17 @@ func TestRegisterCreatorMultipleImplementationsKeyed(t *testing.T) {
 		clearAll()
 
 		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
+		RegisterKeyedCreatorToContainer[interfaces.SomeCounter](DefaultContainer, registrationType, &models.SimpleCounter{}, "firas")
 
 		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
 
 		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
+		RegisterCreatorToContainer[interfaces.SomeCounter](DefaultContainer, registrationType, &models.SimpleCounter{})
 
 		counters, _ := GetKeyedList[interfaces.SomeCounter](context.Background(), "firas")
 
-		if got := len(counters); got != 2 {
-			t.Errorf("got %v, expected %v", got, 2)
+		if got := len(counters); got != 3 {
+			t.Errorf("got %v, expected %v", got, 3)
 		}
 	}
 }

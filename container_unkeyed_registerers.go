@@ -11,7 +11,7 @@ func RegisterCreatorToContainer[T any](con *Container, lifetime Lifetime, creato
 
 // RegisterSingletonToContainer Registers an eagerly instantiated singleton value to the given container.
 // To register an eagerly instantiated scoped value use [ProvideScopedValueToContainer]
-func RegisterSingletonToContainer[T comparable](con *Container, impl T) {
+func RegisterSingletonToContainer[T any](con *Container, impl T) {
 	registerSingletonToContainer(con, impl, nil)
 }
 
@@ -24,13 +24,13 @@ func RegisterFuncToContainer[T any](con *Container, lifetime Lifetime, initializ
 // This value will be injected in runtime using the [ProvideScopedValue] function.
 // Resolving objects which depend on this value will panic if the value has not been provided.
 // Placeholder with the same type and key can be registered only once.
-func RegisterPlaceholderToContainer[T comparable](con *Container) {
+func RegisterPlaceholderToContainer[T any](con *Container) {
 	registerPlaceholderToContainer[T](con, nil)
 }
 
 // ProvideScopedValueToContainer injects a concrete value into the given context.
 // This value will be available only to the given container. And the container can only resolve this value if
 // it has the matching (type and key's) Placeholder registered. Checkout the [RegisterPlaceholderToContainer] function for more info.
-func ProvideScopedValueToContainer[T comparable](con *Container, ctx context.Context, value T) context.Context {
+func ProvideScopedValueToContainer[T any](con *Container, ctx context.Context, value T) context.Context {
 	return provideScopedValueToContainer(con, ctx, value, nil)
 }

@@ -18,15 +18,15 @@ type serviceResolver interface {
 	//getInvokedSingleton returns the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
 	getInvokedSingleton() (con *concrete, isInvokedSingleton bool)
 
-	//isPlaceHolder returns true if this resolver is a placeHolder.
-	//A placeHolder is a special Scoped resolver that doesn't have Creator or Factory (a.k.a anonymousInitializer) function
-	isPlaceHolder() bool
+	//isPlaceholder returns true if this resolver is a placeholder.
+	//A placeholder is a special Scoped resolver that doesn't have Creator or Factory (a.k.a anonymousInitializer) function
+	isPlaceholder() bool
 
-	//providePlaceHolderDefaultValue provides a default value for a placeHolder for validation
-	providePlaceHolderDefaultValue(ctn *Container, ctx context.Context) context.Context
+	//providePlaceholderDefaultValue provides a default value for a placeholder for validation
+	providePlaceholderDefaultValue(ctn *Container, ctx context.Context) context.Context
 
 	// isScopedValueResolved returns true if this resolver is a scoped resolver and the scoped value has been already resolved.
-	// in case this resolver is a placeHolder, then it returns true if the placeholder value has been provided.
+	// in case this resolver is a placeholder, then it returns true if the placeholder value has been provided.
 	isScopedValueResolved(ctx context.Context) bool
 }
 
@@ -85,7 +85,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 		validateLifetime(currentStack, this.resolverMetadata)
 	}
 
-	// try get concrete from context scope
+	// try to get concrete from context scope
 	if this.lifetime == Scoped {
 		scopedConcrete, ok := ctx.Value(this.id).(*concrete)
 		if ok {
@@ -93,8 +93,8 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 		}
 	}
 
-	if this.isPlaceHolder() {
-		panic(placeHolderValueNotProvided(this.resolverMetadata))
+	if this.isPlaceholder() {
+		panic(placeholderValueNotProvided(this.resolverMetadata))
 	}
 
 	// this resolver is about to create a new concrete value, we have to put it to the resolversStack until the creation done
@@ -111,7 +111,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 	var concreteValue T
 	invocationTime := time.Now()
 
-	// first, try make concrete implementation from `anonymousInitializer`
+	// first, try to make concrete implementation from `anonymousInitializer`
 	// if nil, try the concrete implementation `Creator`
 	if this.anonymousInitializer != nil {
 		concreteValue, ctx = (*this.anonymousInitializer)(ctx)
@@ -201,11 +201,11 @@ func (this resolverMetadata) String() string {
 	return fmt.Sprintf("Resolver(%s, type={%s}, key='%s')", this.lifetime, getUnderlyingTypeName(this.id.pointerTypeName), this.id.oreKey)
 }
 
-func (this serviceResolverImpl[T]) isPlaceHolder() bool {
+func (this serviceResolverImpl[T]) isPlaceholder() bool {
 	return this.lifetime == Scoped && this.anonymousInitializer == nil && this.creatorInstance == nil
 }
 
-func (this serviceResolverImpl[T]) providePlaceHolderDefaultValue(ctn *Container, ctx context.Context) context.Context {
+func (this serviceResolverImpl[T]) providePlaceholderDefaultValue(ctn *Container, ctx context.Context) context.Context {
 	defaultValue := *new(T)
 	concreteValue := &concrete{
 		value:           defaultValue,

@@ -85,11 +85,11 @@ func (this *Container) Validate() {
 	}
 	ctx := context.Background()
 
-	//provide default value for all placeHolders
+	//provide default value for all placeholders
 	for _, resolvers := range this.resolvers {
 		for _, resolver := range resolvers {
-			if resolver.isPlaceHolder() {
-				ctx = resolver.providePlaceHolderDefaultValue(this, ctx)
+			if resolver.isPlaceholder() {
+				ctx = resolver.providePlaceholderDefaultValue(this, ctx)
 			}
 		}
 	}

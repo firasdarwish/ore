@@ -17,7 +17,7 @@ func TestValidate_CircularDepsUniformLifetype(t *testing.T) {
 				_, ctx = Get[*m.DisposableService1](ctx) //1 calls 1
 				return &m.DisposableService1{Name: "1"}, ctx
 			})
-			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect cyclic dependency"), Validate)
+			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected cyclic dependency"), Validate)
 		})
 		t.Run("Indirect circular "+lt.String()+" (1 calls 2 calls 3 calls 1)", func(t *testing.T) {
 			clearAll()
@@ -33,7 +33,7 @@ func TestValidate_CircularDepsUniformLifetype(t *testing.T) {
 				_, ctx = Get[*m.DisposableService1](ctx) //3 calls 1
 				return &m.DisposableService3{Name: "3"}, ctx
 			})
-			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect cyclic dependency"), Validate)
+			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected cyclic dependency"), Validate)
 		})
 		t.Run("Middle circular "+lt.String()+" (1 calls 2 calls 3 calls 4 calls 2)", func(t *testing.T) {
 			clearAll()
@@ -53,7 +53,7 @@ func TestValidate_CircularDepsUniformLifetype(t *testing.T) {
 				_, ctx = Get[*m.DisposableService2](ctx) //4 calls 2
 				return &m.DisposableService4{Name: "4"}, ctx
 			})
-			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect cyclic dependency"), Validate)
+			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected cyclic dependency"), Validate)
 		})
 		t.Run("circular on complex tree "+lt.String()+"", func(t *testing.T) {
 			clearAll()
@@ -79,7 +79,7 @@ func TestValidate_CircularDepsUniformLifetype(t *testing.T) {
 				_, ctx = Get[*m.DisposableService3](ctx) //5 calls 3 => circular here: 5->3->4->5
 				return &m.DisposableService5{Name: "5"}, ctx
 			})
-			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect cyclic dependency"), Validate)
+			assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected cyclic dependency"), Validate)
 		})
 		t.Run("fake circular top down "+lt.String()+": (1 calls 2 (x2) calls 3 calls 4, 2 calls 4)", func(t *testing.T) {
 			clearAll()
@@ -147,8 +147,8 @@ func TestValidate_CircularMixedLifetype(t *testing.T) {
 		_, ctx = Get[*m.DisposableService3](ctx) //1 calls 3
 		return &m.DisposableService1{Name: "1"}, ctx
 	})
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect cyclic dependency"), Validate)
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect cyclic dependency"), func() {
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected cyclic dependency"), Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected cyclic dependency"), func() {
 		_, _ = Get[*m.DisposableService1](context.Background())
 	})
 }
@@ -162,7 +162,7 @@ func TestValidate_LifetimeAlignment_SingletonCallsScoped(t *testing.T) {
 		_, ctx = GetFromContainer[*m.DisposableService2](con, ctx) //1 depends on 2
 		return &m.DisposableService1{Name: "1"}, ctx
 	})
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected lifetime misalignment"), con.Validate)
 }
 func TestValidate_LifetimeAlignment_ScopedCallsTransient(t *testing.T) {
 	con := NewContainer()
@@ -173,7 +173,7 @@ func TestValidate_LifetimeAlignment_ScopedCallsTransient(t *testing.T) {
 	RegisterFuncToContainer(con, Transient, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 		return &m.DisposableService2{Name: "2"}, ctx
 	})
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected lifetime misalignment"), con.Validate)
 }
 func TestValidate_LifetimeAlignment_SingletonCallsTransient(t *testing.T) {
 	con := NewContainer()
@@ -188,7 +188,7 @@ func TestValidate_LifetimeAlignment_SingletonCallsTransient(t *testing.T) {
 	RegisterFuncToContainer(con, Transient, func(ctx context.Context) (*m.DisposableService3, context.Context) {
 		return &m.DisposableService3{Name: "3"}, ctx
 	})
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected lifetime misalignment"), con.Validate)
 }
 
 func TestValidate_MissingDependency(t *testing.T) {
@@ -209,13 +209,13 @@ func TestValidate_MissingDependency(t *testing.T) {
 	assert2.PanicsWithError(t, assert2.ErrorStartsWith("implementation not found for type"), Validate)
 }
 
-func TestValidate_WithPlaceHolder(t *testing.T) {
+func TestValidate_WithPlaceholder(t *testing.T) {
 	con := NewContainer()
 	RegisterPlaceholderToContainer[*m.Trader](con)
 	assert.NotPanics(t, con.Validate)
 }
 
-func TestValidate_WithPlaceHolderInterface(t *testing.T) {
+func TestValidate_WithPlaceholderInterface(t *testing.T) {
 	con := NewContainer()
 	RegisterPlaceholderToContainer[m.IPerson](con)
 	assert.NotPanics(t, con.Validate)
@@ -229,5 +229,5 @@ func TestValidate_DisableValidation(t *testing.T) {
 		return &m.Broker{Name: "John"}, ctx
 	})
 
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detect lifetime misalignment"), con.Validate)
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("detected lifetime misalignment"), con.Validate)
 }

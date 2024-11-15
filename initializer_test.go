@@ -9,22 +9,115 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegisterFunc(t *testing.T) {
-	for _, registrationType := range types {
-		clearAll()
+func TestRegisterFuncSingleton(t *testing.T) {
+	clearAll()
 
-		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
-			return &models.SimpleCounter{}, ctx
-		})
+	RegisterFunc[interfaces.SomeCounter](Singleton, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	})
 
-		c, _ := Get[interfaces.SomeCounter](context.Background())
+	ctx := context.Background()
 
-		c.AddOne()
-		c.AddOne()
+	c, ctx := Get[interfaces.SomeCounter](ctx)
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
 
-		if got := c.GetCount(); got != 2 {
-			t.Errorf("got %v, expected %v", got, 2)
-		}
+	RegisterFuncToContainer[interfaces.SomeCounter](DefaultContainer, Singleton, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	})
+
+	c, ctx = Get[interfaces.SomeCounter](ctx)
+
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+
+	RegisterKeyedFuncToContainer[interfaces.SomeCounter](DefaultContainer, Singleton, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	}, "firas")
+
+	c, ctx = Get[interfaces.SomeCounter](ctx)
+
+	if got := c.GetCount(); got != 3 {
+		t.Errorf("got %v, expected %v", got, 3)
+	}
+}
+
+func TestRegisterFuncScoped(t *testing.T) {
+	clearAll()
+
+	RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	})
+
+	ctx := context.Background()
+
+	c, ctx := Get[interfaces.SomeCounter](ctx)
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+
+	RegisterFuncToContainer[interfaces.SomeCounter](DefaultContainer, Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	})
+
+	c, ctx = Get[interfaces.SomeCounter](ctx)
+
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+
+	RegisterKeyedFuncToContainer[interfaces.SomeCounter](DefaultContainer, Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	}, "firas")
+
+	c, ctx = Get[interfaces.SomeCounter](ctx)
+
+	if got := c.GetCount(); got != 3 {
+		t.Errorf("got %v, expected %v", got, 3)
+	}
+}
+
+func TestRegisterFuncTransient(t *testing.T) {
+	clearAll()
+
+	RegisterFunc[interfaces.SomeCounter](Transient, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	})
+
+	ctx := context.Background()
+
+	c, ctx := Get[interfaces.SomeCounter](ctx)
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+	c.AddOne()
+
+	RegisterFuncToContainer[interfaces.SomeCounter](DefaultContainer, Transient, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	})
+
+	c, ctx = Get[interfaces.SomeCounter](ctx)
+
+	c.AddOne()
+
+	RegisterKeyedFuncToContainer[interfaces.SomeCounter](DefaultContainer, Transient, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
+	}, "firas")
+
+	c, ctx = Get[interfaces.SomeCounter](ctx)
+
+	if got := c.GetCount(); got != 0 {
+		t.Errorf("got %v, expected %v", got, 0)
 	}
 }
 

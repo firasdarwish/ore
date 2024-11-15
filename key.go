@@ -2,51 +2,16 @@ package ore
 
 import (
 	"reflect"
-	"strconv"
 )
 
-type KeyStringer any
-
-func oreKey(key KeyStringer) string {
-	if key == nil {
-		return "n"
-	}
-
-	keyT, kV := stringifyOreKey(key)
-	return keyT + kV
-}
-
-func stringifyOreKey(key KeyStringer) (string, string) {
+func validateOreKeyType(key KeyStringer) {
 	switch key.(type) {
 	case nil:
-		return "n", ""
 	case string:
-		return "s", key.(string)
-	case int:
-		return "i", strconv.Itoa(key.(int))
-	case int8:
-		return "i8", strconv.FormatInt(int64(key.(int8)), 36)
-	case int16:
-		return "i16", strconv.FormatInt(int64(key.(int16)), 36)
-	case int32:
-		return "i32", strconv.FormatInt(int64(key.(int32)), 36)
-	case int64:
-		return "i64", strconv.FormatInt(key.(int64), 36)
-
-	case uint:
-		return "ui", strconv.FormatUint(uint64(key.(uint)), 36)
-	case uint8:
-		return "ui8", strconv.FormatUint(uint64(key.(uint8)), 36)
-	case uint16:
-		return "ui16", strconv.FormatUint(uint64(key.(uint16)), 36)
-	case uint32:
-		return "ui32", strconv.FormatUint(uint64(key.(uint32)), 36)
-	case uint64:
-		return "ui64", strconv.FormatUint(key.(uint64), 36)
-	case float32:
-		return "f32", strconv.FormatFloat(float64(key.(float32)), 'x', -1, 32)
-	case float64:
-		return "f64", strconv.FormatFloat(key.(float64), 'x', -1, 64)
+	case int, int8, int16, int32, int64:
+	case uint, uint8, uint16, uint32, uint64:
+	case float32, float64:
+		break
 	default:
 		panic(invalidKeyType(reflect.TypeOf(key)))
 	}

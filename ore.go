@@ -12,14 +12,16 @@ var (
 	//contextKeyResolversStack is a special context key. The value of this key is the [ResolversStack].
 	contextKeyResolversStack specialContextKey = "__ORE_DEP_STACK"
 
-	//placeHolderResolverID is a special resolverID of every "placeHolder". "placeHolder" is a special resolver
+	//placeholderResolverID is a special resolverID of every "placeholder". "placeholder" is a special resolver
 	//describing a "promise" for a concrete value, which will be provided in runtime.
-	placeHolderResolverID = -1
+	placeholderResolverID = -1
 )
 
 var types = []Lifetime{Singleton, Transient, Scoped}
 
 type contextKeysRepository = []contextKey
+
+type KeyStringer any
 
 type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)
@@ -31,7 +33,8 @@ func init() {
 
 // Generates a unique identifier for a service resolver based on type and key(s)
 func getTypeID(pointerTypeName pointerTypeName, key KeyStringer) typeID {
-	return typeID{pointerTypeName, oreKey(key)}
+	validateOreKeyType(key)
+	return typeID{pointerTypeName, key}
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
@@ -51,11 +54,11 @@ func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key Ke
 	defer this.lock.Unlock()
 
 	resolverID := len(this.resolvers[typeID])
-	if resolver.isPlaceHolder() {
+	if resolver.isPlaceholder() {
 		if resolverID > 0 {
 			panic(typeAlreadyRegistered(typeID))
 		}
-		resolverID = placeHolderResolverID
+		resolverID = placeholderResolverID
 	}
 
 	resolver.id = contextKey{

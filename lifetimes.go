@@ -18,6 +18,6 @@ func (this Lifetime) String() string {
 	case 2:
 		return "Singleton"
 	default:
-		return "Unknow"
+		return "Unknown"
 	}
 }

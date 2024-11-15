@@ -14,14 +14,9 @@ type contextKey struct {
 }
 type typeID struct {
 	pointerTypeName pointerTypeName
-	oreKey          string
+	oreKey          KeyStringer
 }
 type pointerTypeName string
-
-func isNil[T comparable](impl T) bool {
-	var mock T
-	return impl == mock
-}
 
 func (this *Container) clearAll() {
 	this.resolvers = make(map[typeID][]serviceResolver)
