@@ -16,7 +16,7 @@ func TestPlaceHolder_HappyPath(t *testing.T) {
 	RegisterPlaceholder[*m.Trader]()
 
 	//get the placeHolder value would failed
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("No value has been provided for this placeholder"), func() {
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("no value has been provided for this placeholder"), func() {
 		_, _ = Get[*m.Trader](context.Background())
 	})
 
@@ -146,7 +146,7 @@ func TestPlaceHolder_PerModule(t *testing.T) {
 	trader, ctx := GetFromContainer[*m.Trader](con1, ctx)
 	assert.Equal(t, "John", trader.Name)
 
-	assert2.PanicsWithError(t, assert2.ErrorStartsWith("No value has been provided for this placeholder"), func() {
+	assert2.PanicsWithError(t, assert2.ErrorStartsWith("no value has been provided for this placeholder"), func() {
 		trader, ctx = GetFromContainer[*m.Trader](con2, ctx)
 	})
 }
