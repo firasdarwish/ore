@@ -26,7 +26,7 @@ func cyclicDependency(resolver resolverMetadata) error {
 	return fmt.Errorf("detected cyclic dependency where: %s depends on itself", resolver)
 }
 
-func placeHolderValueNotProvided(resolver resolverMetadata) error {
+func placeholderValueNotProvided(resolver resolverMetadata) error {
 	return fmt.Errorf("no value has been provided for this placeholder: %s", resolver)
 }
 

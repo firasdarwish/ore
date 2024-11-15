@@ -18,15 +18,15 @@ type serviceResolver interface {
 	//getInvokedSingleton returns the invoked singleton value, or false if the resolver is not a singleton or has not been invoked
 	getInvokedSingleton() (con *concrete, isInvokedSingleton bool)
 
-	//isPlaceHolder returns true if this resolver is a placeHolder.
-	//A placeHolder is a special Scoped resolver that doesn't have Creator or Factory (a.k.a anonymousInitializer) function
+	//isPlaceHolder returns true if this resolver is a placeholder.
+	//A placeholder is a special Scoped resolver that doesn't have Creator or Factory (a.k.a anonymousInitializer) function
 	isPlaceHolder() bool
 
-	//providePlaceHolderDefaultValue provides a default value for a placeHolder for validation
+	//providePlaceHolderDefaultValue provides a default value for a placeholder for validation
 	providePlaceHolderDefaultValue(ctn *Container, ctx context.Context) context.Context
 
 	// isScopedValueResolved returns true if this resolver is a scoped resolver and the scoped value has been already resolved.
-	// in case this resolver is a placeHolder, then it returns true if the placeholder value has been provided.
+	// in case this resolver is a placeholder, then it returns true if the placeholder value has been provided.
 	isScopedValueResolved(ctx context.Context) bool
 }
 
@@ -94,7 +94,7 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 	}
 
 	if this.isPlaceHolder() {
-		panic(placeHolderValueNotProvided(this.resolverMetadata))
+		panic(placeholderValueNotProvided(this.resolverMetadata))
 	}
 
 	// this resolver is about to create a new concrete value, we have to put it to the resolversStack until the creation done

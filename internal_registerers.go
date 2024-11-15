@@ -86,7 +86,7 @@ func provideScopedValueToContainer[T any](con *Container, ctx context.Context, v
 	id := contextKey{
 		containerID: con.containerID,
 		typeID:      typeIdentifier[T](key),
-		resolverID:  placeHolderResolverID,
+		resolverID:  placeholderResolverID,
 	}
 	return addScopedConcreteToContext(ctx, id, concreteValue)
 }
