@@ -292,7 +292,7 @@ Alias is also scoped by key. When you "Get" an alias with keys for eg: `ore.Get[
 
 ### Registration Validation
 
-Once you're done with registering all the services, it is recommended to call `ore.Seal()`, then `ore.Validate()`, then finally `ore.DisableValidation=true`.
+Once you're done with registering all the services, it is recommended to call `ore.Seal()`, then `ore.Validate()`, then finally `ore.DefaultContainer.DisableValidation=true`.
 
 `ore.Validate()` invokes ALL your registered resolvers. The purpose is to panic early if your registrations were in bad shape:
 
@@ -313,7 +313,7 @@ Option 1 (run `ore.Validate` on test) is usually a better choice.
 
 (2) It is recommended to seal your container `ore.Seal()` (which seals the container) on application start => Please don't call `ore.RegisterXX` all over the place.
 
-(3) A combination of `ore.Buile()` and then `ore.Validate()` and then `ore.DisabledValidation=true` ensures no more new resolvers will be registered AND all registered resolvers are validated, this will 
+(3) A combination of `ore.Buile()` and then `ore.Validate()` and then `ore.DefaultContainer.DisabledValidation=true` ensures no more new resolvers will be registered AND all registered resolvers are validated, this will 
 prevent any further validation each time a resolver is invoked (`ore.Get`) which greatly enhances performance.
 
 (4) Keep the object creation function (a.k.a resolvers) simple. Their only responsibility should be **object creation**.
