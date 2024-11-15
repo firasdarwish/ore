@@ -19,21 +19,21 @@ func nilVal[T any]() error {
 }
 
 func lifetimeMisalignment(resolver resolverMetadata, depResolver resolverMetadata) error {
-	return fmt.Errorf("detect lifetime misalignment: %s depends on %s", resolver, depResolver)
+	return fmt.Errorf("detected lifetime misalignment: %s depends on %s", resolver, depResolver)
 }
 
 func cyclicDependency(resolver resolverMetadata) error {
-	return fmt.Errorf("detect cyclic dependency where: %s depends on itself", resolver)
+	return fmt.Errorf("detected cyclic dependency where: %s depends on itself", resolver)
 }
 
 func placeHolderValueNotProvided(resolver resolverMetadata) error {
-	return fmt.Errorf("No value has been provided for this placeholder: %s", resolver)
+	return fmt.Errorf("no value has been provided for this placeholder: %s", resolver)
 }
 
 func typeAlreadyRegistered(typeID typeID) error {
-	return fmt.Errorf("The type '%s' has already been registered (as a Resolver or as a Placeholder). Cannot override it with other Placeholder", typeID)
+	return fmt.Errorf("the type '%s' has already been registered (as a Resolver or as a Placeholder). Cannot override it with other Placeholder", typeID)
 }
 
-var alreadyBuilt = errors.New("services container is already built")
-var alreadyBuiltCannotAdd = errors.New("cannot appendToContainer, services container is already built")
-var nilKey = errors.New("cannot have nil keys")
+var alreadyBuilt = errors.New("services container is already sealed")
+var alreadyBuiltCannotAdd = errors.New("cannot register new resolvers, container is sealed")
+var nilKey = errors.New("cannot use nil key")
