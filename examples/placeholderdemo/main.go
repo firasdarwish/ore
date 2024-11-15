@@ -15,14 +15,14 @@ type SomeService struct {
 
 func main() {
 	//register SomeService which depends on "someConfig"
-	ore.RegisterLazyFunc[*SomeService](ore.Scoped, func(ctx context.Context) (*SomeService, context.Context) {
+	ore.RegisterFunc[*SomeService](ore.Scoped, func(ctx context.Context) (*SomeService, context.Context) {
 		someConfig, ctx := ore.Get[string](ctx, "someConfig")
 		return &SomeService{someConfig}, ctx
 	})
 
 	//someConfig is unknow at registration time
 	//the value of "someConfig" depends on the future user's request
-	ore.RegisterPlaceHolder[string]("someConfig")
+	ore.RegisterPlaceholder[string]("someConfig")
 
 	//Seal registration, no further registration is allowed
 	ore.Seal()

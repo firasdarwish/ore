@@ -8,20 +8,20 @@ import (
 )
 
 func main() {
-	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+	ore.RegisterFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
 		return &mycounter{}, ctx
 	}, "firas")
 
-	ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+	ore.RegisterFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 		fmt.Println("NEWLY INITIALIZED FROM FUNC")
 		return &mycounter{}, ctx
 	}, "darwish")
 
-	ore.RegisterLazyCreator[Counter](ore.Singleton, &mycounter{})
+	ore.RegisterCreator[Counter](ore.Singleton, &mycounter{})
 
 	cc := &mycounter{}
-	ore.RegisterEagerSingleton[Counter](cc)
+	ore.RegisterSingleton[Counter](cc)
 
 	ctx := context.Background()
 
@@ -37,7 +37,7 @@ func main() {
 
 	fmt.Printf("Total Count: %v", c.Total())
 
-	ore.RegisterLazyCreator[GenericCounter[uint]](ore.Scoped, &genCounter[uint]{})
+	ore.RegisterCreator[GenericCounter[uint]](ore.Scoped, &genCounter[uint]{})
 
 	gc, ctx := ore.Get[GenericCounter[uint]](ctx)
 	gc.Add(1)

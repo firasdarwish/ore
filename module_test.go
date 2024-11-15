@@ -13,12 +13,12 @@ func TestModuleIsolation(t *testing.T) {
 	for _, lifetime := range types {
 		t.Run(fmt.Sprintf("Module isolation %s", lifetime), func(t *testing.T) {
 			con1 := NewContainer()
-			RegisterLazyFuncToContainer(con1, lifetime, func(ctx context.Context) (*m.Trader, context.Context) {
+			RegisterFuncToContainer(con1, lifetime, func(ctx context.Context) (*m.Trader, context.Context) {
 				return &m.Trader{Name: "John"}, ctx
 			})
 
 			con2 := NewContainer()
-			RegisterLazyFuncToContainer(con2, lifetime, func(ctx context.Context) (*m.Trader, context.Context) {
+			RegisterFuncToContainer(con2, lifetime, func(ctx context.Context) (*m.Trader, context.Context) {
 				return &m.Trader{Name: "Mary"}, ctx
 			})
 

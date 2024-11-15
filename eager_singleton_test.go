@@ -12,7 +12,7 @@ import (
 func TestRegisterEagerSingleton(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
 	c, _ := Get[interfaces.SomeCounter](context.Background())
 
@@ -27,16 +27,16 @@ func TestRegisterEagerSingleton(t *testing.T) {
 func TestRegisterEagerSingletonNilImplementation(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterEagerSingleton[interfaces.SomeCounter](nil)
+		RegisterSingleton[interfaces.SomeCounter](nil)
 	})
 }
 
 func TestRegisterEagerSingletonMultipleImplementations(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
 	counters, _ := GetList[interfaces.SomeCounter](context.Background())
 
@@ -48,10 +48,10 @@ func TestRegisterEagerSingletonMultipleImplementations(t *testing.T) {
 func TestRegisterEagerSingletonMultipleImplementationsKeyed(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
 	counters, _ := GetList[interfaces.SomeCounter](context.Background(), "firas")
 
@@ -63,7 +63,7 @@ func TestRegisterEagerSingletonMultipleImplementationsKeyed(t *testing.T) {
 func TestRegisterEagerSingletonSingletonState(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
 	c, _ := Get[interfaces.SomeCounter](context.Background())
 	c.AddOne()
@@ -85,13 +85,13 @@ func TestRegisterEagerSingletonSingletonState(t *testing.T) {
 func TestRegisterEagerSingletonNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, nil, "")
+		RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, nil, "")
 	})
 }
 
 func TestRegisterEagerSingletonNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
+	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
 	assert.Panics(t, func() {
 		Get[interfaces.SomeCounter](context.Background(), nil, "")
 	})
@@ -100,7 +100,7 @@ func TestRegisterEagerSingletonNilKeyOnGetting(t *testing.T) {
 func TestRegisterEagerSingletonGeneric(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
+	RegisterSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
 
 	c, _ := Get[interfaces.SomeCounterGeneric[uint]](context.Background())
 
@@ -115,9 +115,9 @@ func TestRegisterEagerSingletonGeneric(t *testing.T) {
 func TestRegisterEagerSingletonMultipleGenericImplementations(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
-	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
-	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
+	RegisterSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
+	RegisterSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
+	RegisterSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
 
 	counters, _ := GetList[interfaces.SomeCounterGeneric[uint]](context.Background())
 

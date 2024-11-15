@@ -9,11 +9,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRegisterLazyFunc(t *testing.T) {
+func TestRegisterFunc(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		})
 
@@ -28,40 +28,40 @@ func TestRegisterLazyFunc(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncNilFuncTransient(t *testing.T) {
+func TestRegisterFuncNilFuncTransient(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyFunc[interfaces.SomeCounter](Transient, nil)
+		RegisterFunc[interfaces.SomeCounter](Transient, nil)
 	})
 }
 
-func TestRegisterLazyFuncNilFuncScoped(t *testing.T) {
+func TestRegisterFuncNilFuncScoped(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyFunc[interfaces.SomeCounter](Scoped, nil)
+		RegisterFunc[interfaces.SomeCounter](Scoped, nil)
 	})
 }
 
-func TestRegisterLazyFuncNilFuncSingleton(t *testing.T) {
+func TestRegisterFuncNilFuncSingleton(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyFunc[interfaces.SomeCounter](Singleton, nil)
+		RegisterFunc[interfaces.SomeCounter](Singleton, nil)
 	})
 }
 
-func TestRegisterLazyFuncMultipleImplementations(t *testing.T) {
+func TestRegisterFuncMultipleImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		})
 
-		RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		})
 
-		RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		})
 
@@ -73,19 +73,19 @@ func TestRegisterLazyFuncMultipleImplementations(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncMultipleImplementationsKeyed(t *testing.T) {
+func TestRegisterFuncMultipleImplementationsKeyed(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		}, "firas")
 
-		RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		}, "firas")
 
-		RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		})
 
@@ -97,12 +97,12 @@ func TestRegisterLazyFuncMultipleImplementationsKeyed(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncSingletonState(t *testing.T) {
+func TestRegisterFuncSingletonState(t *testing.T) {
 	var registrationType Lifetime = Singleton
 
 	clearAll()
 
-	RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	})
 
@@ -123,12 +123,12 @@ func TestRegisterLazyFuncSingletonState(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncScopedState(t *testing.T) {
+func TestRegisterFuncScopedState(t *testing.T) {
 	var registrationType Lifetime = Scoped
 
 	clearAll()
 
-	RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	})
 
@@ -151,12 +151,12 @@ func TestRegisterLazyFuncScopedState(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncTransientState(t *testing.T) {
+func TestRegisterFuncTransientState(t *testing.T) {
 	var registrationType Lifetime = Transient
 
 	clearAll()
 
-	RegisterLazyFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	})
 
@@ -179,18 +179,18 @@ func TestRegisterLazyFuncTransientState(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncNilKeyOnRegistering(t *testing.T) {
+func TestRegisterFuncNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		}, "", nil)
 	})
 }
 
-func TestRegisterLazyFuncNilKeyOnGetting(t *testing.T) {
+func TestRegisterFuncNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	}, "firas")
 
@@ -199,11 +199,11 @@ func TestRegisterLazyFuncNilKeyOnGetting(t *testing.T) {
 	})
 }
 
-func TestRegisterLazyFuncGeneric(t *testing.T) {
+func TestRegisterFuncGeneric(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
+		RegisterFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
 			return &models.CounterGeneric[uint]{}, ctx
 		})
 
@@ -218,19 +218,19 @@ func TestRegisterLazyFuncGeneric(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncMultipleGenericImplementations(t *testing.T) {
+func TestRegisterFuncMultipleGenericImplementations(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
+		RegisterFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
 			return &models.CounterGeneric[uint]{}, ctx
 		})
 
-		RegisterLazyFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
+		RegisterFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
 			return &models.CounterGeneric[uint]{}, ctx
 		})
 
-		RegisterLazyFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
+		RegisterFunc[interfaces.SomeCounterGeneric[uint]](registrationType, func(ctx context.Context) (interfaces.SomeCounterGeneric[uint], context.Context) {
 			return &models.CounterGeneric[uint]{}, ctx
 		})
 
@@ -242,17 +242,17 @@ func TestRegisterLazyFuncMultipleGenericImplementations(t *testing.T) {
 	}
 }
 
-func TestRegisterLazyFuncScopedNested(t *testing.T) {
+func TestRegisterFuncScopedNested(t *testing.T) {
 	clearAll()
 
-	RegisterLazyFunc[*models.A](Transient, func(ctx context.Context) (*models.A, context.Context) {
+	RegisterFunc[*models.A](Transient, func(ctx context.Context) (*models.A, context.Context) {
 		cc, ctx := Get[*models.C](ctx)
 		return &models.A{
 			C: cc,
 		}, ctx
 	})
 
-	RegisterLazyFunc[*models.C](Scoped, func(ctx context.Context) (*models.C, context.Context) {
+	RegisterFunc[*models.C](Scoped, func(ctx context.Context) (*models.C, context.Context) {
 		return &models.C{}, ctx
 	})
 

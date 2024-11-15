@@ -10,16 +10,16 @@ import (
 
 func TestSeal(t *testing.T) {
 	clearAll()
-	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	assert.Panics(t, func() {
-		RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+		RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	})
 }
 
 func TestIsSeal(t *testing.T) {
 	clearAll()
-	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
+	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	if got := IsSealed(); got != false {
 		t.Errorf("IsSealed() = %v; want %v", got, false)
 	}

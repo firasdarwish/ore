@@ -13,7 +13,7 @@ func TestPlaceHolder_HappyPath(t *testing.T) {
 	clearAll()
 
 	//register a placeHolder
-	RegisterPlaceHolder[*m.Trader]()
+	RegisterPlaceholder[*m.Trader]()
 
 	//get the placeHolder value would failed
 	assert2.PanicsWithError(t, assert2.ErrorStartsWith("No value has been provided for this placeholder"), func() {
@@ -59,7 +59,7 @@ func TestPlaceHolder_ProvideValueBeforeRegistering(t *testing.T) {
 	})
 
 	//register a matching placeHolder
-	RegisterPlaceHolder[*m.Trader]()
+	RegisterPlaceholder[*m.Trader]()
 
 	//get the placeHolder value would success
 	trader, _ := Get[*m.Trader](ctx)
@@ -71,24 +71,24 @@ func TestPlaceHolder_OverrideRealResolver(t *testing.T) {
 	clearAll()
 
 	//register a real resolver
-	RegisterEagerSingleton(&m.Trader{Name: "Mary"}, "module1")
+	RegisterSingleton(&m.Trader{Name: "Mary"}, "module1")
 
 	//register a placeHolder to override the real resolver should failed
 	assert2.PanicsWithError(t, assert2.ErrorContains("has already been registered"), func() {
-		RegisterPlaceHolder[*m.Trader]("module1")
+		RegisterPlaceholder[*m.Trader]("module1")
 	})
 
 	//register 2 time a placeHolder should failed
-	RegisterPlaceHolder[*m.Trader]("module2")
+	RegisterPlaceholder[*m.Trader]("module2")
 	assert2.PanicsWithError(t, assert2.ErrorContains("has already been registered"), func() {
-		RegisterPlaceHolder[*m.Trader]("module2")
+		RegisterPlaceholder[*m.Trader]("module2")
 	})
 }
 
 func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	clearAll()
 	//register a placeHolder
-	RegisterPlaceHolder[*m.Trader]("module2")
+	RegisterPlaceholder[*m.Trader]("module2")
 
 	//Provide the value to the placeHolder
 	ctx := ProvideScopedValue[*m.Trader](context.Background(), &m.Trader{Name: "John"}, "module2")
@@ -107,7 +107,7 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	assert.Equal(t, "David", traders[0].Name)
 
 	//Register a real resolver should override the placeHolder resolver
-	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterFunc(Singleton, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary"}, ctx
 	}, "module2")
 
@@ -137,10 +137,10 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 // placeholder value of a module is not accessible from other module
 func TestPlaceHolder_PerModule(t *testing.T) {
 	con1 := NewContainer()
-	RegisterPlaceHolderToContainer[*m.Trader](con1)
+	RegisterPlaceholderToContainer[*m.Trader](con1)
 
 	con2 := NewContainer()
-	RegisterPlaceHolderToContainer[*m.Trader](con2)
+	RegisterPlaceholderToContainer[*m.Trader](con2)
 
 	ctx := ProvideScopedValueToContainer(con1, context.Background(), &m.Trader{Name: "John"})
 	trader, ctx := GetFromContainer[*m.Trader](con1, ctx)

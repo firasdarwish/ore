@@ -11,10 +11,10 @@ import (
 
 func TestAliasResolverConflict(t *testing.T) {
 	clearAll()
-	RegisterLazyFunc(Singleton, func(ctx context.Context) (m.IPerson, context.Context) {
+	RegisterFunc(Singleton, func(ctx context.Context) (m.IPerson, context.Context) {
 		return &m.Trader{Name: "Peter Singleton"}, ctx
 	})
-	RegisterLazyFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Mary Transient"}, ctx
 	})
 
@@ -36,10 +36,10 @@ func TestAliasResolverConflict(t *testing.T) {
 
 func TestAliasOfAliasIsNotAllow(t *testing.T) {
 	clearAll()
-	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterFunc(Singleton, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Peter Singleton"}, ctx
 	})
-	RegisterLazyFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Mary Transient"}, ctx
 	})
 
@@ -58,13 +58,13 @@ func TestAliasOfAliasIsNotAllow(t *testing.T) {
 func TestAliasWithDifferentScope(t *testing.T) {
 	clearAll()
 	module := "TestGetInterfaceAliasWithDifferentScope"
-	RegisterLazyFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Transient"}, ctx
 	}, module)
-	RegisterLazyFunc(Singleton, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Singleton, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Singleton"}, ctx
 	}, module)
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Scoped"}, ctx
 	}, module)
 	RegisterAlias[m.IPerson, *m.Broker]() //link m.IPerson to *m.Broker
@@ -80,24 +80,24 @@ func TestAliasWithDifferentScope(t *testing.T) {
 
 func TestAliasIsScopedByKeys(t *testing.T) {
 	clearAll()
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Peter1"}, ctx
 	}, "module1")
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "John1"}, ctx
 	}, "module1")
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary1"}, ctx
 	}, "module1")
 
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "John2"}, ctx
 	}, "module2")
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary2"}, ctx
 	}, "module2")
 
-	RegisterLazyFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary3"}, ctx
 	}, "module3")
 
@@ -138,7 +138,7 @@ func TestGetGenericAlias(t *testing.T) {
 	for _, registrationType := range types {
 		container := NewContainer()
 
-		RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*m.SimpleCounterUint, context.Context) {
+		RegisterFuncToContainer(container, registrationType, func(ctx context.Context) (*m.SimpleCounterUint, context.Context) {
 			return &m.SimpleCounterUint{}, ctx
 		})
 		RegisterAliasToContainer[interfaces.SomeCounterGeneric[uint], *m.SimpleCounterUint](container)
@@ -157,7 +157,7 @@ func TestGetListGenericAlias(t *testing.T) {
 		container := NewContainer()
 
 		for i := 0; i < 3; i++ {
-			RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*m.SimpleCounterUint, context.Context) {
+			RegisterFuncToContainer(container, registrationType, func(ctx context.Context) (*m.SimpleCounterUint, context.Context) {
 				return &m.SimpleCounterUint{}, ctx
 			})
 		}

@@ -115,11 +115,11 @@ c.AddOne()
 
 ```go
 // register
-ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{})
+ore.RegisterCreator[Counter](ore.Scoped, &models.SimpleCounter{})
 
 // OR
-//ore.RegisterLazyCreator[Counter](ore.Transient, &models.SimpleCounter{})
-//ore.RegisterLazyCreator[Counter](ore.Singleton, &models.SimpleCounter{})
+//ore.RegisterCreator[Counter](ore.Transient, &models.SimpleCounter{})
+//ore.RegisterCreator[Counter](ore.Singleton, &models.SimpleCounter{})
 
 ctx := context.Background()
 
@@ -142,17 +142,17 @@ fmt.Println("TOTAL: ", c.GetCount())
 
 ```go
   // register
-ore.RegisterLazyFunc[Counter](ore.Scoped, func(ctx context.Context) (Counter, context.Context) {
+ore.RegisterFunc[Counter](ore.Scoped, func(ctx context.Context) (Counter, context.Context) {
     return &models.SimpleCounter{}, ctx
 })
 
 // OR
-//ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
+//ore.RegisterFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
 //  return &models.SimpleCounter{}, ctx
 //})
 
 // Keyed service registration
-//ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+//ore.RegisterFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
 // return &models.SimpleCounter{}, ctx
 //}, "name here", 1234)
 
@@ -180,15 +180,15 @@ fmt.Println("TOTAL: ", c.GetCount())
 
 ```go
   // register
-ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{})
+ore.RegisterCreator[Counter](ore.Scoped, &models.SimpleCounter{})
 
-ore.RegisterLazyCreator[Counter](ore.Scoped, &yetAnotherCounter{})
+ore.RegisterCreator[Counter](ore.Scoped, &yetAnotherCounter{})
 
-ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
+ore.RegisterFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
     return &models.SimpleCounter{}, ctx
 })
 
-ore.RegisterLazyCreator[Counter](ore.Singleton, &yetAnotherCounter{})
+ore.RegisterCreator[Counter](ore.Singleton, &yetAnotherCounter{})
 
 ctx := context.Background()
 
@@ -217,11 +217,11 @@ The last registered implementation takes precedence, so you can register a mock 
 
 ```go
   // register
-ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
+ore.RegisterFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
     return &models.SimpleCounter{}, ctx
 }, "name here", 1234)
 
-//ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{}, "name here", 1234)
+//ore.RegisterCreator[Counter](ore.Scoped, &models.SimpleCounter{}, "name here", 1234)
 
 //ore.RegisterEagerSingleton[Counter](&models.SimpleCounter{}, "name here", 1234)
 
@@ -249,13 +249,13 @@ type Trader struct {
 } //implements IPerson
 
 func TestGetInterfaceAlias(t *testing.T) {
-  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
+  ore.RegisterFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
     return &Broker{Name: "Peter"}, ctx
   })
-  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
+  ore.RegisterFunc(ore.Scoped, func(ctx context.Context) (*Broker, context.Context) {
     return &Broker{Name: "John"}, ctx
   })
-  ore.RegisterLazyFunc(ore.Scoped, func(ctx context.Context) (*Trader, context.Context) {
+  ore.RegisterFunc(ore.Scoped, func(ctx context.Context) (*Trader, context.Context) {
     return &Trader{Name: "Mary"}, ctx
   })
 
@@ -360,7 +360,7 @@ Here how Ore can help you:
 type Disposer interface {
   Dispose()
 }
-ore.RegisterLazyCreator(ore.Scoped, &SomeDisposableService{}) //*SomeDisposableService implements Disposer
+ore.RegisterCreator(ore.Scoped, &SomeDisposableService{}) //*SomeDisposableService implements Disposer
 
 //a new request arrive
 ctx, cancel := context.WithCancel(context.Background())
@@ -399,8 +399,8 @@ The `ore.GetResolvedScopedInstances[TInterface](context)` function returns a lis
 | GetResolvedSingletons | GetResolvedSingletonsFromContainer |
 | RegisterAlias | RegisterAliasToContainer |
 | RegisterEagerSingleton | RegisterEagerSingletonToContainer |
-| RegisterLazyCreator | RegisterLazyCreatorToContainer |
-| RegisterLazyFunc | RegisterLazyFuncToContainer |
+| RegisterCreator | RegisterCreatorToContainer |
+| RegisterFunc | RegisterFuncToContainer |
 | RegisterPlaceHolder | RegisterPlaceHolderToContainer |
 | ProvideScopedValue | ProvideScopedValueToContainer |
 
@@ -409,7 +409,7 @@ Most of time you only need the Default Container. In rare use case such as the M
 ```go
 //broker module
 brokerContainer := ore.NewContainer()
-ore.RegisterLazyFuncToContainer(brokerContainer, ore.Singleton, func(ctx context.Context) (*Broker, context.Context) {
+ore.RegisterFuncToContainer(brokerContainer, ore.Singleton, func(ctx context.Context) (*Broker, context.Context) {
   brs, ctx = ore.GetFromContainer[*BrokerageSystem](brokerContainer, ctx)
   return &Broker{brs}, ctx
 })
@@ -420,7 +420,7 @@ broker, _ := ore.GetFromContainer[*Broker](brokerContainer, context.Background()
 
 //trader module
 traderContainer := ore.NewContainer()
-ore.RegisterLazyFuncToContainer(traderContainer, ore.Singleton, func(ctx context.Context) (*Trader, context.Context) {
+ore.RegisterFuncToContainer(traderContainer, ore.Singleton, func(ctx context.Context) (*Trader, context.Context) {
   mkp, ctx = ore.GetFromContainer[*MarketPlace](traderContainer, ctx)
   return &Trader{mkp}, ctx
 })
@@ -438,7 +438,7 @@ A common scenario is that your "Service" depends on something which you couldn't
 
 ```go
 //register SomeService which depends on "someConfig"
-ore.RegisterLazyFunc[*SomeService](ore.Scoped, func(ctx context.Context) (*SomeService, context.Context) {
+ore.RegisterFunc[*SomeService](ore.Scoped, func(ctx context.Context) (*SomeService, context.Context) {
   someConfig, ctx := ore.Get[string](ctx, "someConfig")
   return &SomeService{someConfig}, ctx
 })
@@ -480,7 +480,7 @@ fmt.Println(service.someConfig) //"Admin config"
 - `ore.ProvideScopedValue[T](context, value T, key...)` injects a concrete value into the given context
   - `ore` can access (`Get()` or `GetList()`) to this value only if the corresponding placeholder (which matches the type and keys) is registered.
 
-- A value provided to a placeholder would never replace value returned by other resolvers. It's the opposite, if a type (and key) could be resolved by a real resolver (such as `RegisterLazyFunc`, `RegisterLazyCreator`...), then the later would take precedent.
+- A value provided to a placeholder would never replace value returned by other resolvers. It's the opposite, if a type (and key) could be resolved by a real resolver (such as `RegisterFunc`, `RegisterCreator`...), then the later would take precedent.
 
 <br/>
 
@@ -513,7 +513,7 @@ func (gc *genericCounter[T]) GetCount(ctx context.Context) T {
 ```go
 
 // register
-ore.RegisterLazyFunc[GenericCounter[int]](ore.Scoped, func(ctx context.Context) (GenericCounter[int], context.Context) {
+ore.RegisterFunc[GenericCounter[int]](ore.Scoped, func(ctx context.Context) (GenericCounter[int], context.Context) {
     return &genericCounter[int]{}, ctx
 })
 
@@ -530,8 +530,8 @@ goos: windows
 goarch: amd64
 pkg: github.com/firasdarwish/ore
 cpu: 13th Gen Intel(R) Core(TM) i9-13900H
-BenchmarkRegisterLazyFunc-20             5706694               196.9 ns/op
-BenchmarkRegisterLazyCreator-20          6283534               184.5 ns/op
+BenchmarkRegisterFunc-20             5706694               196.9 ns/op
+BenchmarkRegisterCreator-20          6283534               184.5 ns/op
 BenchmarkRegisterEagerSingleton-20       5146953               211.5 ns/op
 BenchmarkInitialGet-20                   3440072               352.1 ns/op
 BenchmarkGet-20                          9806043               121.8 ns/op
