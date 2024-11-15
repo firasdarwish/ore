@@ -17,6 +17,8 @@ var (
 	placeHolderResolverID = -1
 )
 
+var types = []Lifetime{Singleton, Transient, Scoped}
+
 type contextKeysRepository = []contextKey
 
 type Creator[T any] interface {

@@ -2,6 +2,8 @@ package ore
 
 import (
 	"context"
+	"github.com/firasdarwish/ore/internal/interfaces"
+	"github.com/firasdarwish/ore/internal/models"
 	"testing"
 )
 
@@ -10,8 +12,8 @@ func BenchmarkRegisterLazyFunc(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
-			return &simpleCounter{}, ctx
+		RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+			return &models.SimpleCounter{}, ctx
 		})
 	}
 }
@@ -21,7 +23,7 @@ func BenchmarkRegisterLazyCreator(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+		RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	}
 }
 
@@ -30,20 +32,20 @@ func BenchmarkRegisterEagerSingleton(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		RegisterEagerSingleton[someCounter](&simpleCounter{})
+		RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 	}
 }
 
 func BenchmarkInitialGet(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
-		return &simpleCounter{}, ctx
+	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 
 	Seal()
 	Validate()
@@ -52,40 +54,40 @@ func BenchmarkInitialGet(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Get[someCounter](ctx)
+		Get[interfaces.SomeCounter](ctx)
 	}
 }
 
 func BenchmarkGet(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
-		return &simpleCounter{}, ctx
+	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
 	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, ctx = Get[someCounter](ctx)
+		_, ctx = Get[interfaces.SomeCounter](ctx)
 	}
 }
 
 func BenchmarkInitialGetList(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
-		return &simpleCounter{}, ctx
+	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
 
@@ -93,26 +95,26 @@ func BenchmarkInitialGetList(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		GetList[someCounter](ctx)
+		GetList[interfaces.SomeCounter](ctx)
 	}
 }
 
 func BenchmarkGetList(b *testing.B) {
 	clearAll()
 
-	RegisterLazyFunc[someCounter](Scoped, func(ctx context.Context) (someCounter, context.Context) {
-		return &simpleCounter{}, ctx
+	RegisterLazyFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		return &models.SimpleCounter{}, ctx
 	})
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	Validate()
 	ctx := context.Background()
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, ctx = GetList[someCounter](ctx)
+		_, ctx = GetList[interfaces.SomeCounter](ctx)
 	}
 }

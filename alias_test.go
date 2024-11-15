@@ -2,6 +2,7 @@ package ore
 
 import (
 	"context"
+	"github.com/firasdarwish/ore/internal/interfaces"
 	"testing"
 
 	m "github.com/firasdarwish/ore/internal/models"
@@ -137,12 +138,12 @@ func TestGetGenericAlias(t *testing.T) {
 	for _, registrationType := range types {
 		container := NewContainer()
 
-		RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*simpleCounterUint, context.Context) {
-			return &simpleCounterUint{}, ctx
+		RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*m.SimpleCounterUint, context.Context) {
+			return &m.SimpleCounterUint{}, ctx
 		})
-		RegisterAliasToContainer[someCounterGeneric[uint], *simpleCounterUint](container)
+		RegisterAliasToContainer[interfaces.SomeCounterGeneric[uint], *m.SimpleCounterUint](container)
 
-		c, _ := GetFromContainer[someCounterGeneric[uint]](container, context.Background())
+		c, _ := GetFromContainer[interfaces.SomeCounterGeneric[uint]](container, context.Background())
 
 		c.Add(1)
 		c.Add(1)
@@ -156,14 +157,14 @@ func TestGetListGenericAlias(t *testing.T) {
 		container := NewContainer()
 
 		for i := 0; i < 3; i++ {
-			RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*simpleCounterUint, context.Context) {
-				return &simpleCounterUint{}, ctx
+			RegisterLazyFuncToContainer(container, registrationType, func(ctx context.Context) (*m.SimpleCounterUint, context.Context) {
+				return &m.SimpleCounterUint{}, ctx
 			})
 		}
 
-		RegisterAliasToContainer[someCounterGeneric[uint], *simpleCounterUint](container)
+		RegisterAliasToContainer[interfaces.SomeCounterGeneric[uint], *m.SimpleCounterUint](container)
 
-		counters, _ := GetListFromContainer[someCounterGeneric[uint]](container, context.Background())
+		counters, _ := GetListFromContainer[interfaces.SomeCounterGeneric[uint]](container, context.Background())
 		assert.Equal(t, len(counters), 3)
 
 		c := counters[1]
@@ -172,18 +173,4 @@ func TestGetListGenericAlias(t *testing.T) {
 
 		assert.Equal(t, uint(2), c.GetCount())
 	}
-}
-
-var _ someCounterGeneric[uint] = (*simpleCounterUint)(nil)
-
-type simpleCounterUint struct {
-	counter uint
-}
-
-func (this *simpleCounterUint) Add(number uint) {
-	this.counter += number
-}
-
-func (this *simpleCounterUint) GetCount() uint {
-	return this.counter
 }

@@ -2,6 +2,8 @@ package ore
 
 import (
 	"context"
+	"github.com/firasdarwish/ore/internal/interfaces"
+	"github.com/firasdarwish/ore/internal/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,9 +12,9 @@ import (
 func TestRegisterEagerSingleton(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	c, _ := Get[someCounter](context.Background())
+	c, _ := Get[interfaces.SomeCounter](context.Background())
 
 	c.AddOne()
 	c.AddOne()
@@ -25,18 +27,18 @@ func TestRegisterEagerSingleton(t *testing.T) {
 func TestRegisterEagerSingletonNilImplementation(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterEagerSingleton[someCounter](nil)
+		RegisterEagerSingleton[interfaces.SomeCounter](nil)
 	})
 }
 
 func TestRegisterEagerSingletonMultipleImplementations(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	counters, _ := GetList[someCounter](context.Background())
+	counters, _ := GetList[interfaces.SomeCounter](context.Background())
 
 	if got := len(counters); got != 3 {
 		t.Errorf("got %v, expected %v", got, 3)
@@ -46,12 +48,12 @@ func TestRegisterEagerSingletonMultipleImplementations(t *testing.T) {
 func TestRegisterEagerSingletonMultipleImplementationsKeyed(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{}, "firas")
-	RegisterEagerSingleton[someCounter](&simpleCounter{}, "firas")
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	counters, _ := GetList[someCounter](context.Background(), "firas")
+	counters, _ := GetList[interfaces.SomeCounter](context.Background(), "firas")
 
 	if got := len(counters); got != 2 {
 		t.Errorf("got %v, expected %v", got, 2)
@@ -61,16 +63,16 @@ func TestRegisterEagerSingletonMultipleImplementationsKeyed(t *testing.T) {
 func TestRegisterEagerSingletonSingletonState(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[someCounter](&simpleCounter{})
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	c, _ := Get[someCounter](context.Background())
+	c, _ := Get[interfaces.SomeCounter](context.Background())
 	c.AddOne()
 	c.AddOne()
 
-	c, _ = Get[someCounter](context.Background())
+	c, _ = Get[interfaces.SomeCounter](context.Background())
 	c.AddOne()
 
-	c, _ = Get[someCounter](context.Background())
+	c, _ = Get[interfaces.SomeCounter](context.Background())
 	c.AddOne()
 	c.AddOne()
 	c.AddOne()
@@ -83,24 +85,24 @@ func TestRegisterEagerSingletonSingletonState(t *testing.T) {
 func TestRegisterEagerSingletonNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterEagerSingleton[someCounter](&simpleCounter{}, nil, "")
+		RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, nil, "")
 	})
 }
 
 func TestRegisterEagerSingletonNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	RegisterEagerSingleton[someCounter](&simpleCounter{}, "firas")
+	RegisterEagerSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
 	assert.Panics(t, func() {
-		Get[someCounter](context.Background(), nil, "")
+		Get[interfaces.SomeCounter](context.Background(), nil, "")
 	})
 }
 
 func TestRegisterEagerSingletonGeneric(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[someCounterGeneric[uint]](&counterGeneric[uint]{})
+	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
 
-	c, _ := Get[someCounterGeneric[uint]](context.Background())
+	c, _ := Get[interfaces.SomeCounterGeneric[uint]](context.Background())
 
 	c.Add(5)
 	c.Add(5)
@@ -113,11 +115,11 @@ func TestRegisterEagerSingletonGeneric(t *testing.T) {
 func TestRegisterEagerSingletonMultipleGenericImplementations(t *testing.T) {
 	clearAll()
 
-	RegisterEagerSingleton[someCounterGeneric[uint]](&counterGeneric[uint]{})
-	RegisterEagerSingleton[someCounterGeneric[uint]](&counterGeneric[uint]{})
-	RegisterEagerSingleton[someCounterGeneric[uint]](&counterGeneric[uint]{})
+	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
+	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
+	RegisterEagerSingleton[interfaces.SomeCounterGeneric[uint]](&models.CounterGeneric[uint]{})
 
-	counters, _ := GetList[someCounterGeneric[uint]](context.Background())
+	counters, _ := GetList[interfaces.SomeCounterGeneric[uint]](context.Background())
 
 	if got := len(counters); got != 3 {
 		t.Errorf("got %v, expected %v", got, 3)

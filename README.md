@@ -86,7 +86,7 @@ func (c *simpleCounter) GetCount() int {
 }
 
 func (c *simpleCounter) New(ctx context.Context) (Counter, context.Context) {
-  return &simpleCounter{}, ctx
+  return &models.SimpleCounter{}, ctx
 }
 ```
 
@@ -104,7 +104,7 @@ import (
 
 func main() {
   var c Counter
-  c = &simpleCounter{}
+  c = &models.SimpleCounter{}
 
   // register
   ore.RegisterEagerSingleton[Counter](c)
@@ -133,11 +133,11 @@ import (
 
 func main() {
   // register
-  ore.RegisterLazyCreator[Counter](ore.Scoped, &simpleCounter{})
+  ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{})
 
   // OR
-  //ore.RegisterLazyCreator[Counter](ore.Transient, &simpleCounter{})
-  //ore.RegisterLazyCreator[Counter](ore.Singleton, &simpleCounter{})
+  //ore.RegisterLazyCreator[Counter](ore.Transient, &models.SimpleCounter{})
+  //ore.RegisterLazyCreator[Counter](ore.Singleton, &models.SimpleCounter{})
 
   ctx := context.Background()
 
@@ -171,17 +171,17 @@ import (
 func main() {
   // register
   ore.RegisterLazyFunc[Counter](ore.Scoped, func(ctx context.Context) (Counter, context.Context) {
-    return &simpleCounter{}, ctx
+    return &models.SimpleCounter{}, ctx
   })
 
   // OR
   //ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
-  //  return &simpleCounter{}, ctx
+  //  return &models.SimpleCounter{}, ctx
   //})
 
   // Keyed service registration
   //ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
-  // return &simpleCounter{}, ctx
+  // return &models.SimpleCounter{}, ctx
   //}, "name here", 1234)
 
   ctx := context.Background()
@@ -217,12 +217,12 @@ import (
 
 func main() {
   // register
-  ore.RegisterLazyCreator[Counter](ore.Scoped, &simpleCounter{})
+  ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{})
 
   ore.RegisterLazyCreator[Counter](ore.Scoped, &yetAnotherCounter{})
 
   ore.RegisterLazyFunc[Counter](ore.Transient, func(ctx context.Context) (Counter, context.Context) {
-    return &simpleCounter{}, ctx
+    return &models.SimpleCounter{}, ctx
   })
 
   ore.RegisterLazyCreator[Counter](ore.Singleton, &yetAnotherCounter{})
@@ -266,12 +266,12 @@ import (
 func main() {
   // register
   ore.RegisterLazyFunc[Counter](ore.Singleton, func(ctx context.Context) (Counter, context.Context) {
-    return &simpleCounter{}, ctx
+    return &models.SimpleCounter{}, ctx
   }, "name here", 1234)
 
-  //ore.RegisterLazyCreator[Counter](ore.Scoped, &simpleCounter{}, "name here", 1234)
+  //ore.RegisterLazyCreator[Counter](ore.Scoped, &models.SimpleCounter{}, "name here", 1234)
 
-  //ore.RegisterEagerSingleton[Counter](&simpleCounter{}, "name here", 1234)
+  //ore.RegisterEagerSingleton[Counter](&models.SimpleCounter{}, "name here", 1234)
 
   ctx := context.Background()
 

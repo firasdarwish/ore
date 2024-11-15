@@ -1,6 +1,8 @@
 package ore
 
 import (
+	"github.com/firasdarwish/ore/internal/interfaces"
+	"github.com/firasdarwish/ore/internal/models"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -8,16 +10,16 @@ import (
 
 func TestSeal(t *testing.T) {
 	clearAll()
-	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	Seal()
 	assert.Panics(t, func() {
-		RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+		RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	})
 }
 
 func TestIsSeal(t *testing.T) {
 	clearAll()
-	RegisterLazyCreator[someCounter](Scoped, &simpleCounter{})
+	RegisterLazyCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{})
 	if got := IsSealed(); got != false {
 		t.Errorf("IsSealed() = %v; want %v", got, false)
 	}

@@ -3,6 +3,7 @@ package ore
 import (
 	"context"
 	"fmt"
+	"github.com/firasdarwish/ore/internal/interfaces"
 	"testing"
 	"time"
 
@@ -14,9 +15,9 @@ func TestGet(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
+		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{})
 
-		c, _ := Get[someCounter](context.Background())
+		c, _ := Get[interfaces.SomeCounter](context.Background())
 
 		c.AddOne()
 		c.AddOne()
@@ -31,13 +32,13 @@ func TestGetLatestByDefault(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{})
-		c, _ := Get[someCounter](context.Background())
+		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{})
+		c, _ := Get[interfaces.SomeCounter](context.Background())
 		c.AddOne()
 		c.AddOne()
 
-		RegisterLazyCreator[someCounter](registrationType, &simpleCounter2{})
-		c, _ = Get[someCounter](context.Background())
+		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter2{})
+		c, _ = Get[interfaces.SomeCounter](context.Background())
 		c.AddOne()
 		c.AddOne()
 		c.AddOne()
@@ -52,7 +53,7 @@ func TestGetLatestByDefault(t *testing.T) {
 func TestGetPanicIfNoImplementations(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		Get[someCounter](context.Background())
+		Get[interfaces.SomeCounter](context.Background())
 	})
 }
 
@@ -62,9 +63,9 @@ func TestGetKeyed(t *testing.T) {
 
 		key := fmt.Sprintf("keynum: %v", i)
 
-		RegisterLazyCreator[someCounter](registrationType, &simpleCounter{}, key)
+		RegisterLazyCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{}, key)
 
-		c, _ := Get[someCounter](context.Background(), key)
+		c, _ := Get[interfaces.SomeCounter](context.Background(), key)
 
 		c.AddOne()
 		c.AddOne()
