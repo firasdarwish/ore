@@ -2,29 +2,7 @@ package ore
 
 import (
 	"context"
-	"sort"
 )
-
-func (this *Container) getLastRegisteredResolver(typeID typeID) serviceResolver {
-	// try to get service resolver from container
-	this.lock.RLock()
-	resolvers, resolverExists := this.resolvers[typeID]
-	this.lock.RUnlock()
-
-	if !resolverExists {
-		return nil
-	}
-
-	count := len(resolvers)
-
-	if count == 0 {
-		return nil
-	}
-
-	// index of the last implementation
-	lastIndex := count - 1
-	return resolvers[lastIndex]
-}
 
 // GetFromContainer Retrieves an instance from the given container based on type and key (panics if no valid implementations)
 func GetFromContainer[T any](con *Container, ctx context.Context, key ...KeyStringer) (T, context.Context) {
@@ -58,11 +36,6 @@ func GetFromContainer[T any](con *Container, ctx context.Context, key ...KeyStri
 	}
 	concrete, ctx := lastRegisteredResolver.resolveService(con, ctx)
 	return concrete.value.(T), ctx
-}
-
-// Get Retrieves an instance based on type and key (panics if no valid implementations)
-func Get[T any](ctx context.Context, key ...KeyStringer) (T, context.Context) {
-	return GetFromContainer[T](DefaultContainer, ctx, key...)
 }
 
 // GetListFromContainer Retrieves a list of instances from the given container based on type and key
@@ -111,11 +84,6 @@ func GetListFromContainer[T any](con *Container, ctx context.Context, key ...Key
 	return servicesArray, ctx
 }
 
-// GetList Retrieves a list of instances based on type and key
-func GetList[T any](ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
-	return GetListFromContainer[T](DefaultContainer, ctx, key...)
-}
-
 // GetResolvedSingletonsFromContainer retrieves a list of Singleton instances that implement the [TInterface] from the given container.
 // See [GetResolvedSingletons] for more information.
 func GetResolvedSingletonsFromContainer[TInterface any](con *Container) []TInterface {
@@ -139,6 +107,7 @@ func GetResolvedSingletonsFromContainer[TInterface any](con *Container) []TInter
 	return sortAndSelect[TInterface](list)
 }
 
+// TODO separate to a file
 // GetResolvedSingletons retrieves a list of Singleton instances that implement the [TInterface].
 // The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the "most recently" created one.
 // If an instance "A" depends on certain instances "B" and "C" then this function guarantee to return "B" and "C" before "A" in the list.
@@ -155,6 +124,7 @@ func GetResolvedSingletons[TInterface any]() []TInterface {
 	return GetResolvedSingletonsFromContainer[TInterface](DefaultContainer)
 }
 
+// TODO separate to a file
 // GetResolvedScopedInstances retrieves a list of Scoped instances that implement the [TInterface].
 // The returned instances are sorted by creation time (a.k.a the invocation order), the first one being the most recently created one.
 // If an instance "A" depends on certain instances "B" and "C" then this function guarantee to return "B" and "C" before "A" in the list.
@@ -184,21 +154,4 @@ func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterfac
 	}
 
 	return sortAndSelect[TInterface](list)
-}
-
-// sortAndSelect sorts concretes by invocation order and return its value.
-func sortAndSelect[TInterface any](list []*concrete) []TInterface {
-	//sorting
-	sort.Slice(list, func(i, j int) bool {
-		return list[i].invocationTime.After(list[j].invocationTime) ||
-			(list[i].invocationTime == list[j].invocationTime &&
-				list[i].invocationLevel > list[j].invocationLevel)
-	})
-
-	//selecting
-	result := make([]TInterface, len(list))
-	for i := 0; i < len(list); i++ {
-		result[i] = list[i].value.(TInterface)
-	}
-	return result
 }
