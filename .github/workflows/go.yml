@@ -31,7 +31,10 @@ jobs:
         run: |
           for dir in examples/*/; do
             echo "Building project in $dir"
-            go build -v "$dir" || exit 1
+            cd "$dir" || exit 1
+            go mod tidy
+            go build -v . || exit 1
+            cd - || exit 1
           done
 
       - name: Run coverage
