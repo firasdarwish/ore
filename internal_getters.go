@@ -107,7 +107,7 @@ func getListFromContainer[T any](con *Container, ctx context.Context, key KeyStr
 
 		for index := 0; index < len(resolvers); index++ {
 			resolver := resolvers[index]
-			if resolver.isPlaceHolder() && !resolver.isScopedValueResolved(ctx) {
+			if resolver.isPlaceholder() && !resolver.isScopedValueResolved(ctx) {
 				//the resolver is a placeholder and the placeholder's value has not been provided
 				//don't panic, just skip (don't add anything to the list)
 				continue

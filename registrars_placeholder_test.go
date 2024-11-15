@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPlaceHolder_HappyPath(t *testing.T) {
+func TestPlaceholder_HappyPath(t *testing.T) {
 	clearAll()
 
 	//register a placeholder
@@ -47,7 +47,7 @@ func TestPlaceHolder_HappyPath(t *testing.T) {
 	assert.Equal(t, 1, len(persons))
 }
 
-func TestPlaceHolder_ProvideValueBeforeRegistering(t *testing.T) {
+func TestPlaceholder_ProvideValueBeforeRegistering(t *testing.T) {
 	clearAll()
 
 	//provide a value to the placeholder
@@ -67,7 +67,7 @@ func TestPlaceHolder_ProvideValueBeforeRegistering(t *testing.T) {
 }
 
 // can not register a placeholder to override a real resolver
-func TestPlaceHolder_OverrideRealResolver(t *testing.T) {
+func TestPlaceholder_OverrideRealResolver(t *testing.T) {
 	clearAll()
 
 	//register a real resolver
@@ -85,7 +85,7 @@ func TestPlaceHolder_OverrideRealResolver(t *testing.T) {
 	})
 }
 
-func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
+func TestPlaceholder_OverridePlaceholder(t *testing.T) {
 	clearAll()
 	//register a placeholder
 	RegisterKeyedPlaceholder[*m.Trader]("module2")
@@ -135,7 +135,7 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 }
 
 // placeholder value of a module is not accessible from other module
-func TestPlaceHolder_PerModule(t *testing.T) {
+func TestPlaceholder_PerModule(t *testing.T) {
 	con1 := NewContainer()
 	RegisterPlaceholderToContainer[*m.Trader](con1)
 

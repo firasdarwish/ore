@@ -209,13 +209,13 @@ func TestValidate_MissingDependency(t *testing.T) {
 	assert2.PanicsWithError(t, assert2.ErrorStartsWith("implementation not found for type"), Validate)
 }
 
-func TestValidate_WithPlaceHolder(t *testing.T) {
+func TestValidate_WithPlaceholder(t *testing.T) {
 	con := NewContainer()
 	RegisterPlaceholderToContainer[*m.Trader](con)
 	assert.NotPanics(t, con.Validate)
 }
 
-func TestValidate_WithPlaceHolderInterface(t *testing.T) {
+func TestValidate_WithPlaceholderInterface(t *testing.T) {
 	con := NewContainer()
 	RegisterPlaceholderToContainer[m.IPerson](con)
 	assert.NotPanics(t, con.Validate)

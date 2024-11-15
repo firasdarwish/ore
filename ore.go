@@ -54,7 +54,7 @@ func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key Ke
 	defer this.lock.Unlock()
 
 	resolverID := len(this.resolvers[typeID])
-	if resolver.isPlaceHolder() {
+	if resolver.isPlaceholder() {
 		if resolverID > 0 {
 			panic(typeAlreadyRegistered(typeID))
 		}
