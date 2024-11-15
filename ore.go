@@ -30,27 +30,22 @@ func init() {
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
-func getTypeID(pointerTypeName pointerTypeName, key ...KeyStringer) typeID {
-	for _, stringer := range key {
-		if stringer == nil {
-			panic(nilKey)
-		}
-	}
-	return typeID{pointerTypeName, oreKey(key...)}
+func getTypeID(pointerTypeName pointerTypeName, key KeyStringer) typeID {
+	return typeID{pointerTypeName, oreKey(key)}
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
-func typeIdentifier[T any](key ...KeyStringer) typeID {
-	return getTypeID(getPointerTypeName[T](), key...)
+func typeIdentifier[T any](key KeyStringer) typeID {
+	return getTypeID(getPointerTypeName[T](), key)
 }
 
 // Appends a service resolver to the container with type and key
-func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key ...KeyStringer) {
+func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key KeyStringer) {
 	if this.isSealed {
 		panic(alreadyBuiltCannotAdd)
 	}
 
-	typeID := typeIdentifier[T](key...)
+	typeID := typeIdentifier[T](key)
 
 	this.lock.Lock()
 	defer this.lock.Unlock()

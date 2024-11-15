@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func registerCreatorToContainer[T any](con *Container, lifetime Lifetime, creator Creator[T], key ...KeyStringer) {
+func registerCreatorToContainer[T any](con *Container, lifetime Lifetime, creator Creator[T], key KeyStringer) {
 	if creator == nil {
 		panic(nilVal[T]())
 	}
@@ -18,10 +18,10 @@ func registerCreatorToContainer[T any](con *Container, lifetime Lifetime, creato
 		},
 		creatorInstance: creator,
 	}
-	addResolver[T](con, e, key...)
+	addResolver[T](con, e, key)
 }
 
-func registerSingletonToContainer[T comparable](con *Container, impl T, key ...KeyStringer) {
+func registerSingletonToContainer[T comparable](con *Container, impl T, key KeyStringer) {
 	if isNil[T](impl) {
 		panic(nilVal[T]())
 	}
@@ -36,10 +36,10 @@ func registerSingletonToContainer[T comparable](con *Container, impl T, key ...K
 			invocationTime: time.Now(),
 		},
 	}
-	addResolver[T](con, e, key...)
+	addResolver[T](con, e, key)
 }
 
-func registerFuncToContainer[T any](con *Container, lifetime Lifetime, initializer Initializer[T], key ...KeyStringer) {
+func registerFuncToContainer[T any](con *Container, lifetime Lifetime, initializer Initializer[T], key KeyStringer) {
 	if initializer == nil {
 		panic(nilVal[T]())
 	}
@@ -50,7 +50,7 @@ func registerFuncToContainer[T any](con *Container, lifetime Lifetime, initializ
 		},
 		anonymousInitializer: &initializer,
 	}
-	addResolver[T](con, e, key...)
+	addResolver[T](con, e, key)
 }
 
 func registerAliasToContainer[TInterface, TImpl any](con *Container) {
@@ -64,16 +64,16 @@ func registerAliasToContainer[TInterface, TImpl any](con *Container) {
 	addAliases[TInterface, TImpl](con)
 }
 
-func registerPlaceholderToContainer[T comparable](con *Container, key ...KeyStringer) {
+func registerPlaceholderToContainer[T comparable](con *Container, key KeyStringer) {
 	e := serviceResolverImpl[T]{
 		resolverMetadata: resolverMetadata{
 			lifetime: Scoped,
 		},
 	}
-	addResolver[T](con, e, key...)
+	addResolver[T](con, e, key)
 }
 
-func provideScopedValueToContainer[T comparable](con *Container, ctx context.Context, value T, key ...KeyStringer) context.Context {
+func provideScopedValueToContainer[T comparable](con *Container, ctx context.Context, value T, key KeyStringer) context.Context {
 	concreteValue := &concrete{
 		value:           value,
 		lifetime:        Scoped,
@@ -82,7 +82,7 @@ func provideScopedValueToContainer[T comparable](con *Container, ctx context.Con
 	}
 	id := contextKey{
 		containerID: con.containerID,
-		typeID:      typeIdentifier[T](key...),
+		typeID:      typeIdentifier[T](key),
 		resolverID:  placeHolderResolverID,
 	}
 	return addScopedConcreteToContext(ctx, id, concreteValue)

@@ -76,13 +76,13 @@ type A1 struct{}
 type A2 struct{}
 
 func TestTypeIdentifier(t *testing.T) {
-	id1 := typeIdentifier[*A1]()
-	id11 := typeIdentifier[*A1]()
-	id2 := typeIdentifier[*A2]()
+	id1 := typeIdentifier[*A1](nil)
+	id11 := typeIdentifier[*A1](nil)
+	id2 := typeIdentifier[*A2](nil)
 	assert.NotEqual(t, id1, id2)
 	assert.Equal(t, id1, id11)
 
-	id3 := typeIdentifier[*A1]("a", "b")
-	id4 := typeIdentifier[*A1]("a", "b")
+	id3 := typeIdentifier[*A1]("a")
+	id4 := typeIdentifier[*A1]("a")
 	assert.Equal(t, id3, id4)
 }
