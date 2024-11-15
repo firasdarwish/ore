@@ -18,13 +18,6 @@ func RegisterFunc[T any](lifetime Lifetime, initializer Initializer[T]) {
 	registerFuncToContainer(DefaultContainer, lifetime, initializer, nil)
 }
 
-// TODO move to separate file
-// RegisterAlias Registers an interface type to a concrete implementation.
-// Allowing you to register the concrete implementation to the default container and later get the interface from it.
-func RegisterAlias[TInterface, TImpl any]() {
-	registerAliasToContainer[TInterface, TImpl](DefaultContainer)
-}
-
 // RegisterPlaceholder registers a future value with Scoped lifetime.
 // This value will be injected in runtime using the [ProvideScopedValue] function.
 // Resolving objects which depend on this value will panic if the value has not been provided.
