@@ -43,9 +43,9 @@ func sortAndSelect[TInterface any](list []*concrete) []TInterface {
 	return result
 }
 
-func getFromContainer[T any](con *Container, ctx context.Context, key ...KeyStringer) (T, context.Context) {
+func getFromContainer[T any](con *Container, ctx context.Context, key KeyStringer) (T, context.Context) {
 	pointerTypeName := getPointerTypeName[T]()
-	typeID := getTypeID(pointerTypeName, key...)
+	typeID := getTypeID(pointerTypeName, key)
 	lastRegisteredResolver := con.getLastRegisteredResolver(typeID)
 	if lastRegisteredResolver == nil { //not found, T is an alias
 
@@ -62,7 +62,7 @@ func getFromContainer[T any](con *Container, ctx context.Context, key ...KeyStri
 		}
 		for i := count - 1; i >= 0; i-- {
 			impl := implementations[i]
-			typeID = getTypeID(impl, key...)
+			typeID = getTypeID(impl, key)
 			lastRegisteredResolver = con.getLastRegisteredResolver(typeID)
 			if lastRegisteredResolver != nil {
 				break
@@ -76,7 +76,7 @@ func getFromContainer[T any](con *Container, ctx context.Context, key ...KeyStri
 	return concrete.value.(T), ctx
 }
 
-func getListFromContainer[T any](con *Container, ctx context.Context, key ...KeyStringer) ([]T, context.Context) {
+func getListFromContainer[T any](con *Container, ctx context.Context, key KeyStringer) ([]T, context.Context) {
 	inputPointerTypeName := getPointerTypeName[T]()
 
 	con.lock.RLock()
@@ -94,7 +94,7 @@ func getListFromContainer[T any](con *Container, ctx context.Context, key ...Key
 	for i := 0; i < len(pointerTypeNames); i++ {
 		pointerTypeName := pointerTypeNames[i]
 		// generate type identifier
-		typeID := getTypeID(pointerTypeName, key...)
+		typeID := getTypeID(pointerTypeName, key)
 
 		// try to get service resolver from container
 		con.lock.RLock()

@@ -89,7 +89,7 @@ func TestRegisterFuncMultipleImplementationsKeyed(t *testing.T) {
 			return &models.SimpleCounter{}, ctx
 		})
 
-		counters, _ := GetList[interfaces.SomeCounter](context.Background(), "firas")
+		counters, _ := GetKeyedList[interfaces.SomeCounter](context.Background(), "firas")
 
 		if got := len(counters); got != 2 {
 			t.Errorf("got %v, expected %v", got, 2)
@@ -184,7 +184,7 @@ func TestRegisterFuncNilKeyOnRegistering(t *testing.T) {
 	assert.Panics(t, func() {
 		RegisterKeyedFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
-		}, "", nil)
+		}, nil)
 	})
 }
 
@@ -195,7 +195,7 @@ func TestRegisterFuncNilKeyOnGetting(t *testing.T) {
 	}, "firas")
 
 	assert.Panics(t, func() {
-		Get[interfaces.SomeCounter](context.Background(), "", nil)
+		GetKeyed[interfaces.SomeCounter](context.Background(), "")
 	})
 }
 

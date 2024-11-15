@@ -65,7 +65,7 @@ func TestGetKeyed(t *testing.T) {
 
 		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{}, key)
 
-		c, _ := Get[interfaces.SomeCounter](context.Background(), key)
+		c, _ := GetKeyed[interfaces.SomeCounter](context.Background(), key)
 
 		c.AddOne()
 		c.AddOne()
@@ -124,7 +124,7 @@ func TestGetResolvedSingletons(t *testing.T) {
 		assert.Equal(t, 5, len(disposables))
 
 		//invoke X2 in "somekey" scope
-		_, _ = GetList[fmt.Stringer](ctx, "somekey")
+		_, _ = GetKeyedList[fmt.Stringer](ctx, "somekey")
 
 		//Act
 		//all invoked singleton would be returned whatever keys they are registered with
@@ -218,7 +218,7 @@ func TestGetResolvedScopedInstances(t *testing.T) {
 		assert.Equal(t, "S2", disposables[0].String())
 
 		//invoke the keyed service T1
-		_, ctx = GetList[*m.DisposableService2](ctx, "module1")
+		_, ctx = GetKeyedList[*m.DisposableService2](ctx, "module1")
 
 		//Act
 		disposables = GetResolvedScopedInstances[m.Disposer](ctx) //S2, T1

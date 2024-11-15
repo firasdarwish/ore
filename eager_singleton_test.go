@@ -53,7 +53,7 @@ func TestRegisterEagerSingletonMultipleImplementationsKeyed(t *testing.T) {
 
 	RegisterSingleton[interfaces.SomeCounter](&models.SimpleCounter{})
 
-	counters, _ := GetList[interfaces.SomeCounter](context.Background(), "firas")
+	counters, _ := GetKeyedList[interfaces.SomeCounter](context.Background(), "firas")
 
 	if got := len(counters); got != 2 {
 		t.Errorf("got %v, expected %v", got, 2)
@@ -85,7 +85,7 @@ func TestRegisterEagerSingletonSingletonState(t *testing.T) {
 func TestRegisterEagerSingletonNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, nil, "")
+		RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, nil)
 	})
 }
 
@@ -93,7 +93,7 @@ func TestRegisterEagerSingletonNilKeyOnGetting(t *testing.T) {
 	clearAll()
 	RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
 	assert.Panics(t, func() {
-		Get[interfaces.SomeCounter](context.Background(), nil, "")
+		GetKeyed[interfaces.SomeCounter](context.Background(), nil)
 	})
 }
 

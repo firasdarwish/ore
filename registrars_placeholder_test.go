@@ -94,15 +94,15 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	ctx := ProvideKeyedScopedValue[*m.Trader](context.Background(), &m.Trader{Name: "John"}, "module2")
 
 	//get the placeHolder value would success
-	trader, ctx := Get[*m.Trader](ctx, "module2")
+	trader, ctx := GetKeyed[*m.Trader](ctx, "module2")
 	assert.Equal(t, "John", trader.Name)
 
 	//replace the placeHolder value "John" with a new value "David"
 	ctx = ProvideKeyedScopedValue[*m.Trader](ctx, &m.Trader{Name: "David"}, "module2")
-	trader, ctx = Get[*m.Trader](ctx, "module2")
+	trader, ctx = GetKeyed[*m.Trader](ctx, "module2")
 	assert.Equal(t, "David", trader.Name)
 
-	traders, ctx := GetList[*m.Trader](ctx, "module2")
+	traders, ctx := GetKeyedList[*m.Trader](ctx, "module2")
 	assert.Equal(t, 1, len(traders))
 	assert.Equal(t, "David", traders[0].Name)
 
@@ -111,11 +111,11 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 		return &m.Trader{Name: "Mary"}, ctx
 	}, "module2")
 
-	trader, ctx = Get[*m.Trader](ctx, "module2")
+	trader, ctx = GetKeyed[*m.Trader](ctx, "module2")
 	assert.Equal(t, "Mary", trader.Name)
 
 	//Get both the placeHolder value ("David") and the real resolver value ("Mary")
-	traders, ctx = GetList[*m.Trader](ctx, "module2")
+	traders, ctx = GetKeyedList[*m.Trader](ctx, "module2")
 	assert.Equal(t, 2, len(traders)) //David and Mary
 	assert.True(t, tradersListContainsName(traders, "David"))
 	assert.True(t, tradersListContainsName(traders, "Mary"))
@@ -124,11 +124,11 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	ctx = ProvideKeyedScopedValue[*m.Trader](ctx, &m.Trader{Name: "Nathan"}, "module2")
 
 	//the placeHolder value cannot override the real resolver value
-	trader, ctx = Get[*m.Trader](ctx, "module2")
+	trader, ctx = GetKeyed[*m.Trader](ctx, "module2")
 	assert.Equal(t, "Mary", trader.Name)
 
 	//but it replaces the old placeHolder value ("Nathan" will replace "David")
-	traders, _ = GetList[*m.Trader](ctx, "module2")
+	traders, _ = GetKeyedList[*m.Trader](ctx, "module2")
 	assert.Equal(t, 2, len(traders)) //Nathan and Mary
 	assert.True(t, tradersListContainsName(traders, "Nathan"))
 	assert.True(t, tradersListContainsName(traders, "Mary"))

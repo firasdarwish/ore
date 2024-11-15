@@ -71,10 +71,10 @@ func TestAliasWithDifferentScope(t *testing.T) {
 
 	ctx := context.Background()
 
-	person, ctx := Get[m.IPerson](ctx, module)
+	person, ctx := GetKeyed[m.IPerson](ctx, module)
 	assert.Equal(t, person.(*m.Broker).Name, "Scoped")
 
-	personList, _ := GetList[m.IPerson](ctx, module)
+	personList, _ := GetKeyedList[m.IPerson](ctx, module)
 	assert.Equal(t, len(personList), 3)
 }
 
@@ -106,22 +106,22 @@ func TestAliasIsScopedByKeys(t *testing.T) {
 
 	ctx := context.Background()
 
-	person1, ctx := Get[m.IPerson](ctx, "module1") // will return the m.Broker John
+	person1, ctx := GetKeyed[m.IPerson](ctx, "module1") // will return the m.Broker John
 	assert.Equal(t, person1.(*m.Broker).Name, "John1")
 
-	personList1, ctx := GetList[m.IPerson](ctx, "module1") // will return all registered m.Broker and m.Trader
+	personList1, ctx := GetKeyedList[m.IPerson](ctx, "module1") // will return all registered m.Broker and m.Trader
 	assert.Equal(t, len(personList1), 3)
 
-	person2, ctx := Get[m.IPerson](ctx, "module2") // will return the m.Broker John
+	person2, ctx := GetKeyed[m.IPerson](ctx, "module2") // will return the m.Broker John
 	assert.Equal(t, person2.(*m.Broker).Name, "John2")
 
-	personList2, ctx := GetList[m.IPerson](ctx, "module2") // will return all registered m.Broker and m.Trader
+	personList2, ctx := GetKeyedList[m.IPerson](ctx, "module2") // will return all registered m.Broker and m.Trader
 	assert.Equal(t, len(personList2), 2)
 
-	person3, ctx := Get[m.IPerson](ctx, "module3") // will return the m.Trader Mary
+	person3, ctx := GetKeyed[m.IPerson](ctx, "module3") // will return the m.Trader Mary
 	assert.Equal(t, person3.(*m.Trader).Name, "Mary3")
 
-	personList3, ctx := GetList[m.IPerson](ctx, "module3") // will return all registered m.Broker and m.Trader
+	personList3, ctx := GetKeyedList[m.IPerson](ctx, "module3") // will return all registered m.Broker and m.Trader
 	assert.Equal(t, len(personList3), 1)
 
 	personListNoModule, _ := GetList[m.IPerson](ctx) // will return all registered m.Broker and m.Trader without keys
