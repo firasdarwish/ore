@@ -77,11 +77,11 @@ func TestRegisterFuncMultipleImplementationsKeyed(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterKeyedFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		}, "firas")
 
-		RegisterFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterKeyedFunc[interfaces.SomeCounter](registrationType, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		}, "firas")
 
@@ -182,7 +182,7 @@ func TestRegisterFuncTransientState(t *testing.T) {
 func TestRegisterFuncNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+		RegisterKeyedFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 			return &models.SimpleCounter{}, ctx
 		}, "", nil)
 	})
@@ -190,7 +190,7 @@ func TestRegisterFuncNilKeyOnRegistering(t *testing.T) {
 
 func TestRegisterFuncNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	RegisterFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
+	RegisterKeyedFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
 		return &models.SimpleCounter{}, ctx
 	}, "firas")
 

@@ -69,9 +69,9 @@ func TestRegisterCreatorMultipleImplementationsKeyed(t *testing.T) {
 	for _, registrationType := range types {
 		clearAll()
 
-		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
 
-		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "firas")
 
 		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{})
 
@@ -162,13 +162,13 @@ func TestRegisterCreatorTransientState(t *testing.T) {
 func TestRegisterCreatorNilKeyOnRegistering(t *testing.T) {
 	clearAll()
 	assert.Panics(t, func() {
-		RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, "", nil)
+		RegisterKeyedCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, "", nil)
 	})
 }
 
 func TestRegisterCreatorNilKeyOnGetting(t *testing.T) {
 	clearAll()
-	RegisterCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, "firas")
+	RegisterKeyedCreator[interfaces.SomeCounter](Scoped, &models.SimpleCounter{}, "firas")
 	assert.Panics(t, func() {
 		Get[interfaces.SomeCounter](context.Background(), nil)
 	})

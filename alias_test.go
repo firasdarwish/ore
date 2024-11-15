@@ -58,13 +58,13 @@ func TestAliasOfAliasIsNotAllow(t *testing.T) {
 func TestAliasWithDifferentScope(t *testing.T) {
 	clearAll()
 	module := "TestGetInterfaceAliasWithDifferentScope"
-	RegisterFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterKeyedFunc(Transient, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Transient"}, ctx
 	}, module)
-	RegisterFunc(Singleton, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterKeyedFunc(Singleton, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Singleton"}, ctx
 	}, module)
-	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Scoped"}, ctx
 	}, module)
 	RegisterAlias[m.IPerson, *m.Broker]() //link m.IPerson to *m.Broker
@@ -80,24 +80,24 @@ func TestAliasWithDifferentScope(t *testing.T) {
 
 func TestAliasIsScopedByKeys(t *testing.T) {
 	clearAll()
-	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "Peter1"}, ctx
 	}, "module1")
-	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "John1"}, ctx
 	}, "module1")
-	RegisterFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary1"}, ctx
 	}, "module1")
 
-	RegisterFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
+	RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.Broker, context.Context) {
 		return &m.Broker{Name: "John2"}, ctx
 	}, "module2")
-	RegisterFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary2"}, ctx
 	}, "module2")
 
-	RegisterFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary3"}, ctx
 	}, "module3")
 

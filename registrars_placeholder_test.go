@@ -71,34 +71,34 @@ func TestPlaceHolder_OverrideRealResolver(t *testing.T) {
 	clearAll()
 
 	//register a real resolver
-	RegisterSingleton(&m.Trader{Name: "Mary"}, "module1")
+	RegisterKeyedSingleton(&m.Trader{Name: "Mary"}, "module1")
 
 	//register a placeHolder to override the real resolver should failed
 	assert2.PanicsWithError(t, assert2.ErrorContains("has already been registered"), func() {
-		RegisterPlaceholder[*m.Trader]("module1")
+		RegisterKeyedPlaceholder[*m.Trader]("module1")
 	})
 
 	//register 2 time a placeHolder should failed
-	RegisterPlaceholder[*m.Trader]("module2")
+	RegisterKeyedPlaceholder[*m.Trader]("module2")
 	assert2.PanicsWithError(t, assert2.ErrorContains("has already been registered"), func() {
-		RegisterPlaceholder[*m.Trader]("module2")
+		RegisterKeyedPlaceholder[*m.Trader]("module2")
 	})
 }
 
 func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	clearAll()
 	//register a placeHolder
-	RegisterPlaceholder[*m.Trader]("module2")
+	RegisterKeyedPlaceholder[*m.Trader]("module2")
 
 	//Provide the value to the placeHolder
-	ctx := ProvideScopedValue[*m.Trader](context.Background(), &m.Trader{Name: "John"}, "module2")
+	ctx := ProvideKeyedScopedValue[*m.Trader](context.Background(), &m.Trader{Name: "John"}, "module2")
 
 	//get the placeHolder value would success
 	trader, ctx := Get[*m.Trader](ctx, "module2")
 	assert.Equal(t, "John", trader.Name)
 
 	//replace the placeHolder value "John" with a new value "David"
-	ctx = ProvideScopedValue[*m.Trader](ctx, &m.Trader{Name: "David"}, "module2")
+	ctx = ProvideKeyedScopedValue[*m.Trader](ctx, &m.Trader{Name: "David"}, "module2")
 	trader, ctx = Get[*m.Trader](ctx, "module2")
 	assert.Equal(t, "David", trader.Name)
 
@@ -107,7 +107,7 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	assert.Equal(t, "David", traders[0].Name)
 
 	//Register a real resolver should override the placeHolder resolver
-	RegisterFunc(Singleton, func(ctx context.Context) (*m.Trader, context.Context) {
+	RegisterKeyedFunc(Singleton, func(ctx context.Context) (*m.Trader, context.Context) {
 		return &m.Trader{Name: "Mary"}, ctx
 	}, "module2")
 
@@ -121,7 +121,7 @@ func TestPlaceHolder_OverridePlaceHolder(t *testing.T) {
 	assert.True(t, tradersListContainsName(traders, "Mary"))
 
 	//replace the placeHolder value ("David") with a new value ("Nathan")
-	ctx = ProvideScopedValue[*m.Trader](ctx, &m.Trader{Name: "Nathan"}, "module2")
+	ctx = ProvideKeyedScopedValue[*m.Trader](ctx, &m.Trader{Name: "Nathan"}, "module2")
 
 	//the placeHolder value cannot override the real resolver value
 	trader, ctx = Get[*m.Trader](ctx, "module2")

@@ -35,10 +35,10 @@ func TestGetListKeyed(t *testing.T) {
 
 		key := "somekeyhere"
 
-		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
-		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
-		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
-		RegisterCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "Firas")
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &models.SimpleCounter{}, "Firas")
 
 		counters, _ := GetList[interfaces.SomeCounter](context.Background(), key)
 		if got := len(counters); got != 3 {

@@ -63,7 +63,7 @@ func TestGetKeyed(t *testing.T) {
 
 		key := fmt.Sprintf("keynum: %v", i)
 
-		RegisterCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{}, key)
+		RegisterKeyedCreator[interfaces.SomeCounter](registrationType, &m.SimpleCounter{}, key)
 
 		c, _ := Get[interfaces.SomeCounter](context.Background(), key)
 
@@ -97,7 +97,7 @@ func TestGetResolvedSingletons(t *testing.T) {
 		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService4, context.Context) {
 			return &m.DisposableService4{Name: "X1"}, ctx
 		})
-		RegisterFunc(Singleton, func(ctx context.Context) (*m.DisposableService4, context.Context) {
+		RegisterKeyedFunc(Singleton, func(ctx context.Context) (*m.DisposableService4, context.Context) {
 			return &m.DisposableService4{Name: "X2"}, ctx
 		}, "somekey")
 
@@ -199,7 +199,7 @@ func TestGetResolvedScopedInstances(t *testing.T) {
 		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService1, context.Context) {
 			return &m.DisposableService1{Name: "S2"}, ctx
 		})
-		RegisterFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
+		RegisterKeyedFunc(Scoped, func(ctx context.Context) (*m.DisposableService2, context.Context) {
 			return &m.DisposableService2{Name: "T1"}, ctx
 		}, "module1")
 
