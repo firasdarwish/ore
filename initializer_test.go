@@ -2,9 +2,10 @@ package ore
 
 import (
 	"context"
+	"testing"
+
 	"github.com/firasdarwish/ore/internal/interfaces"
 	"github.com/firasdarwish/ore/internal/models"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -270,15 +271,6 @@ func TestRegisterFuncTransientState(t *testing.T) {
 	if got := c.GetCount(); got != 3 {
 		t.Errorf("got %v, expected %v", got, 3)
 	}
-}
-
-func TestRegisterFuncNilKeyOnRegistering(t *testing.T) {
-	clearAll()
-	assert.Panics(t, func() {
-		RegisterKeyedFunc[interfaces.SomeCounter](Scoped, func(ctx context.Context) (interfaces.SomeCounter, context.Context) {
-			return &models.SimpleCounter{}, ctx
-		}, nil)
-	})
 }
 
 func TestRegisterFuncNilKeyOnGetting(t *testing.T) {

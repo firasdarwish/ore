@@ -2,9 +2,10 @@ package ore
 
 import (
 	"context"
+	"testing"
+
 	"github.com/firasdarwish/ore/internal/interfaces"
 	"github.com/firasdarwish/ore/internal/models"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -86,21 +87,6 @@ func TestRegisterSingletonSingletonState(t *testing.T) {
 	if got := c.GetCount(); got != 6 {
 		t.Errorf("got %v, expected %v", got, 6)
 	}
-}
-
-func TestRegisterSingletonNilKeyOnRegistering(t *testing.T) {
-	clearAll()
-	assert.Panics(t, func() {
-		RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, nil)
-	})
-}
-
-func TestRegisterSingletonNilKeyOnGetting(t *testing.T) {
-	clearAll()
-	RegisterKeyedSingleton[interfaces.SomeCounter](&models.SimpleCounter{}, "firas")
-	assert.Panics(t, func() {
-		GetKeyed[interfaces.SomeCounter](context.Background(), nil)
-	})
 }
 
 func TestRegisterSingletonGeneric(t *testing.T) {

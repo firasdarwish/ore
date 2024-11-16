@@ -15,13 +15,14 @@ var (
 	//placeholderResolverID is a special resolverID of every "placeholder". "placeholder" is a special resolver
 	//describing a "promise" for a concrete value, which will be provided in runtime.
 	placeholderResolverID = -1
+
+	//nilKey is a special key used when registering / resolving unkeyed service.
+	nilKey = specialOreKey(0)
 )
 
 var types = []Lifetime{Singleton, Transient, Scoped}
 
 type contextKeysRepository = []contextKey
-
-type KeyStringer any
 
 type Creator[T any] interface {
 	New(ctx context.Context) (T, context.Context)
@@ -32,18 +33,17 @@ func init() {
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
-func getTypeID(pointerTypeName pointerTypeName, key KeyStringer) typeID {
-	validateOreKeyType(key)
+func getTypeID[K comparable](pointerTypeName pointerTypeName, key K) typeID {
 	return typeID{pointerTypeName, key}
 }
 
 // Generates a unique identifier for a service resolver based on type and key(s)
-func typeIdentifier[T any](key KeyStringer) typeID {
+func typeIdentifier[T any, K comparable](key K) typeID {
 	return getTypeID(getPointerTypeName[T](), key)
 }
 
 // Appends a service resolver to the container with type and key
-func addResolver[T any](this *Container, resolver serviceResolverImpl[T], key KeyStringer) {
+func addResolver[T any, K comparable](this *Container, resolver serviceResolverImpl[T], key K) {
 	if this.isSealed {
 		panic(alreadyBuiltCannotAdd)
 	}

@@ -43,7 +43,7 @@ func sortAndSelect[TInterface any](list []*concrete) []TInterface {
 	return result
 }
 
-func getFromContainer[T any](con *Container, ctx context.Context, key KeyStringer) (T, context.Context) {
+func getFromContainer[T any, K comparable](con *Container, ctx context.Context, key K) (T, context.Context) {
 	pointerTypeName := getPointerTypeName[T]()
 	typeID := getTypeID(pointerTypeName, key)
 	lastRegisteredResolver := con.getLastRegisteredResolver(typeID)
@@ -76,7 +76,7 @@ func getFromContainer[T any](con *Container, ctx context.Context, key KeyStringe
 	return concrete.value.(T), ctx
 }
 
-func getListFromContainer[T any](con *Container, ctx context.Context, key KeyStringer) ([]T, context.Context) {
+func getListFromContainer[T any, K comparable](con *Container, ctx context.Context, key K) ([]T, context.Context) {
 	inputPointerTypeName := getPointerTypeName[T]()
 
 	con.lock.RLock()
