@@ -6,6 +6,7 @@ import (
 )
 
 type specialContextKey string
+type specialOreKey int
 
 type contextKey struct {
 	typeID
@@ -14,7 +15,7 @@ type contextKey struct {
 }
 type typeID struct {
 	pointerTypeName pointerTypeName
-	oreKey          KeyStringer
+	oreKey          any //comparable
 }
 type pointerTypeName string
 

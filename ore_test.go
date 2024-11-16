@@ -1,9 +1,10 @@
 package ore
 
 import (
+	"testing"
+
 	"github.com/firasdarwish/ore/internal/interfaces"
 	"github.com/firasdarwish/ore/internal/models"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -75,14 +76,40 @@ func TestNewContainerIDSerial(t *testing.T) {
 type A1 struct{}
 type A2 struct{}
 
-func TestTypeIdentifier(t *testing.T) {
-	id1 := typeIdentifier[*A1](nil)
-	id11 := typeIdentifier[*A1](nil)
-	id2 := typeIdentifier[*A2](nil)
+func TestTypeIdentifierNilkey(t *testing.T) {
+	id1 := typeIdentifier[*A1](nilKey)
+	id2 := typeIdentifier[*A1](0)
+	//nilKey looks like 0 but it is not equal 0
 	assert.NotEqual(t, id1, id2)
-	assert.Equal(t, id1, id11)
+
+	id21 := typeIdentifier[*A1](0)
+	assert.Equal(t, id2, id21)
 
 	id3 := typeIdentifier[*A1]("a")
 	id4 := typeIdentifier[*A1]("a")
 	assert.Equal(t, id3, id4)
+}
+
+func TestTypeIdentifierComplexKey(t *testing.T) {
+	key1 := contextKey{
+		typeID: typeID{
+			pointerTypeName: "toto",
+			oreKey:          models.Trader{Name: "Hiep"},
+		},
+		containerID: 1,
+		resolverID:  2,
+	}
+	key2 := contextKey{
+		typeID: typeID{
+			pointerTypeName: "toto",
+			oreKey:          models.Trader{Name: "Hiep"},
+		},
+		containerID: 1,
+		resolverID:  2,
+	}
+
+	id1 := typeIdentifier[A1](key1)
+	id2 := typeIdentifier[A1](key2)
+
+	assert.Equal(t, id1, id2)
 }

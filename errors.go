@@ -36,4 +36,3 @@ func typeAlreadyRegistered(typeID typeID) error {
 
 var alreadyBuilt = errors.New("services container is already sealed")
 var alreadyBuiltCannotAdd = errors.New("cannot register new resolvers, container is sealed")
-var nilKey = errors.New("cannot use nil key")

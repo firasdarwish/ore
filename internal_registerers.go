@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func registerCreatorToContainer[T any](con *Container, lifetime Lifetime, creator Creator[T], key KeyStringer) {
+func registerCreatorToContainer[T any, K comparable](con *Container, lifetime Lifetime, creator Creator[T], key K) {
 	if creator == nil {
 		panic(nilVal[T]())
 	}
@@ -21,7 +21,7 @@ func registerCreatorToContainer[T any](con *Container, lifetime Lifetime, creato
 	addResolver[T](con, e, key)
 }
 
-func registerSingletonToContainer[T any](con *Container, impl T, key KeyStringer) {
+func registerSingletonToContainer[T any, K comparable](con *Container, impl T, key K) {
 	var mock any
 	mock = impl
 
@@ -42,7 +42,7 @@ func registerSingletonToContainer[T any](con *Container, impl T, key KeyStringer
 	addResolver[T](con, e, key)
 }
 
-func registerFuncToContainer[T any](con *Container, lifetime Lifetime, initializer Initializer[T], key KeyStringer) {
+func registerFuncToContainer[T any, K comparable](con *Container, lifetime Lifetime, initializer Initializer[T], key K) {
 	if initializer == nil {
 		panic(nilVal[T]())
 	}
@@ -67,7 +67,7 @@ func registerAliasToContainer[TInterface, TImpl any](con *Container) {
 	addAliases[TInterface, TImpl](con)
 }
 
-func registerPlaceholderToContainer[T any](con *Container, key KeyStringer) {
+func registerPlaceholderToContainer[T any, K comparable](con *Container, key K) {
 	e := serviceResolverImpl[T]{
 		resolverMetadata: resolverMetadata{
 			lifetime: Scoped,
@@ -76,7 +76,7 @@ func registerPlaceholderToContainer[T any](con *Container, key KeyStringer) {
 	addResolver[T](con, e, key)
 }
 
-func provideScopedValueToContainer[T any](con *Container, ctx context.Context, value T, key KeyStringer) context.Context {
+func provideScopedValueToContainer[T any, K comparable](con *Container, ctx context.Context, value T, key K) context.Context {
 	concreteValue := &concrete{
 		value:           value,
 		lifetime:        Scoped,
