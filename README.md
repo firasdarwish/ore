@@ -2,7 +2,6 @@
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/firasdarwish/ore.svg)](https://pkg.go.dev/github.com/firasdarwish/ore)
 [![Go Report Card](https://goreportcard.com/badge/github.com/firasdarwish/ore)](https://goreportcard.com/report/github.com/firasdarwish/ore)
-[![Go Reference](https://pkg.go.dev/badge/github.com/firasdarwish/ore.svg)](https://pkg.go.dev/github.com/firasdarwish/ore)
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go?tab=readme-ov-file#dependency-injection)
 [![codecov](https://codecov.io/gh/firasdarwish/ore/graph/badge.svg?token=ISZVCCYGCR)](https://codecov.io/gh/firasdarwish/ore)
 
@@ -104,10 +103,10 @@ type MyService struct {
 
 func main() {
   // Register a singleton service
-  ore.RegisterSingleton(&MyService{Message: "Hello, Ore!"})
+  ore.RegisterSingleton[SomeServiceInterface](&MyService{Message: "Hello, Ore!"})
   
   // Resolve the service
-  service, _ := ore.Get[*MyService](context.Background())
+  service, _ := ore.Get[*SomeServiceInterface](context.Background())
   fmt.Println(service.Message) // Output: Hello, Ore!
 }
 ```
