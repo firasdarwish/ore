@@ -5,6 +5,11 @@
 [![Mentioned in Awesome Go](https://awesome.re/mentioned-badge.svg)](https://github.com/avelino/awesome-go?tab=readme-ov-file#dependency-injection)
 [![codecov](https://codecov.io/gh/firasdarwish/ore/graph/badge.svg?token=ISZVCCYGCR)](https://codecov.io/gh/firasdarwish/ore)
 
+
+![ore](https://ore.lilury.com/img/ore-gopher.png)
+
+<br />
+
 **Ore** is a powerful and flexible **Dependency Injection (DI)** library for Go, designed to simplify complex
 application structures while maintaining performance and modularity.
 
