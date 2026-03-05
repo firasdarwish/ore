@@ -59,15 +59,14 @@ func (this *Container) SetName(name string) *Container {
 	if name == "" {
 		panic("container name can not be empty")
 	}
-
+	this.lock.Lock()
+	defer this.lock.Unlock()
 	if this.name == name {
 		return this
 	}
-
 	if this.name != "" {
 		panic("container name already set")
 	}
-
 	this.name = name
 	return this
 }
