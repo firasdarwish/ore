@@ -122,18 +122,18 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 }
 
 func getResolvedSingletonsFromContainer[TInterface any](con *Container) []TInterface {
-	con.lock.RLock()
-	defer con.lock.RUnlock()
+	con.lock.Lock()
+	defer con.lock.Unlock()
 
 	list := []*concrete{}
 
 	//filtering
 	for _, resolvers := range con.resolvers {
 		for _, resolver := range resolvers {
-			con, isInvokedSingleton := resolver.getInvokedSingleton()
+			singletonConcrete, isInvokedSingleton := resolver.getInvokedSingleton()
 			if isInvokedSingleton {
-				if _, ok := con.value.(TInterface); ok {
-					list = append(list, con)
+				if _, ok := singletonConcrete.value.(TInterface); ok {
+					list = append(list, singletonConcrete)
 				}
 			}
 		}
