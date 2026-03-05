@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sync"
 	"time"
 )
 
@@ -17,6 +18,7 @@ func registerCreatorToContainer[T any, K comparable](con *Container, lifetime Li
 			lifetime: lifetime,
 		},
 		creatorInstance: creator,
+		singletonOnce:   &sync.Once{},
 	}
 	addResolver[T](con, e, key)
 }
@@ -52,6 +54,7 @@ func registerFuncToContainer[T any, K comparable](con *Container, lifetime Lifet
 			lifetime: lifetime,
 		},
 		anonymousInitializer: &initializer,
+		singletonOnce:        &sync.Once{},
 	}
 	addResolver[T](con, e, key)
 }
