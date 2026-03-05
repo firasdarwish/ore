@@ -98,6 +98,9 @@ func (this *Container) Validate() {
 	//invoke all resolver to detect potential registration problem
 	for _, resolvers := range this.resolvers {
 		for _, resolver := range resolvers {
+			if resolver.isPlaceholder() {
+				continue // placeholder has no constructor to validate
+			}
 			_, ctx = resolver.resolveService(this, ctx)
 		}
 	}
