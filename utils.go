@@ -24,6 +24,7 @@ func (this *Container) clearAll() {
 	this.aliases = make(map[pointerTypeName][]pointerTypeName)
 	this.isSealed = false
 	this.DisableValidation = false
+	this.name = "DEFAULT"
 }
 
 func clearAll() {
@@ -38,12 +39,7 @@ func getPointerTypeName[T any]() pointerTypeName {
 }
 
 func getUnderlyingTypeName(ptn pointerTypeName) string {
-	s := string(ptn)
-	index := strings.Index(s, "*")
-	if index == -1 {
-		return s // no '*' found, return the original string
-	}
-	return s[:index] + s[index+1:]
+	return strings.TrimLeft(string(ptn), "*")
 }
 
 func (this typeID) String() string {

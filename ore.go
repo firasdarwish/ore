@@ -44,14 +44,14 @@ func typeIdentifier[T any, K comparable](key K) typeID {
 
 // Appends a service resolver to the container with type and key
 func addResolver[T any, K comparable](this *Container, resolver serviceResolverImpl[T], key K) {
+	this.lock.Lock()
+	defer this.lock.Unlock()
+
 	if this.isSealed {
 		panic(alreadyBuiltCannotAdd)
 	}
 
 	typeID := typeIdentifier[T](key)
-
-	this.lock.Lock()
-	defer this.lock.Unlock()
 
 	resolverID := len(this.resolvers[typeID])
 	if resolver.isPlaceholder() {
@@ -70,6 +70,9 @@ func addResolver[T any, K comparable](this *Container, resolver serviceResolverI
 }
 
 func replaceResolver[T any](this *Container, resolver serviceResolverImpl[T]) {
+	if resolver.id.resolverID < 0 {
+		return // never replace a placeholder resolver
+	}
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	this.resolvers[resolver.id.typeID][resolver.id.resolverID] = resolver

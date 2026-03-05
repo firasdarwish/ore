@@ -9,27 +9,23 @@ func (this *Container) getLastRegisteredResolver(typeID typeID) serviceResolver 
 	// try to get service resolver from container
 	this.lock.RLock()
 	resolvers, resolverExists := this.resolvers[typeID]
+	count := len(resolvers)
+	var last serviceResolver
+	if resolverExists && count > 0 {
+		last = resolvers[count-1] // read the value while still under lock
+	}
 	this.lock.RUnlock()
 
-	if !resolverExists {
+	if !resolverExists || count == 0 {
 		return nil
 	}
-
-	count := len(resolvers)
-
-	if count == 0 {
-		return nil
-	}
-
-	// index of the last implementation
-	lastIndex := count - 1
-	return resolvers[lastIndex]
+	return last
 }
 
 // sortAndSelect sorts concretes by invocation order and return its value.
 func sortAndSelect[TInterface any](list []*concrete) []TInterface {
 	//sorting
-	sort.Slice(list, func(i, j int) bool {
+	sort.SliceStable(list, func(i, j int) bool {
 		return list[i].invocationTime.After(list[j].invocationTime) ||
 			(list[i].invocationTime == list[j].invocationTime &&
 				list[i].invocationLevel > list[j].invocationLevel)
@@ -80,11 +76,15 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 	inputPointerTypeName := getPointerTypeName[T]()
 
 	con.lock.RLock()
-	pointerTypeNames, implExists := con.aliases[inputPointerTypeName]
+	aliasedNames, implExists := con.aliases[inputPointerTypeName]
 	con.lock.RUnlock()
 
+	var pointerTypeNames []pointerTypeName
+
 	if implExists {
-		pointerTypeNames = append(pointerTypeNames, inputPointerTypeName)
+		pointerTypeNames = make([]pointerTypeName, len(aliasedNames)+1)
+		copy(pointerTypeNames, aliasedNames)
+		pointerTypeNames[len(aliasedNames)] = inputPointerTypeName
 	} else {
 		pointerTypeNames = []pointerTypeName{inputPointerTypeName}
 	}
@@ -98,7 +98,14 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 
 		// try to get service resolver from container
 		con.lock.RLock()
-		resolvers, resolverExists := con.resolvers[typeID]
+		rawResolvers, resolverExists := con.resolvers[typeID]
+		var resolvers []serviceResolver
+		if resolverExists {
+			// Copy the slice so the backing array can't be swapped out
+			// by a concurrent replaceResolver (Singleton first-init) mid-iteration.
+			resolvers = make([]serviceResolver, len(rawResolvers))
+			copy(resolvers, rawResolvers)
+		}
 		con.lock.RUnlock()
 
 		if !resolverExists {
@@ -112,8 +119,8 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 				//don't panic, just skip (don't add anything to the list)
 				continue
 			}
-			con, newCtx := resolver.resolveService(con, ctx)
-			servicesArray = append(servicesArray, con.value.(T))
+			resolvedConcrete, newCtx := resolver.resolveService(con, ctx)
+			servicesArray = append(servicesArray, resolvedConcrete.value.(T))
 			ctx = newCtx
 		}
 	}
@@ -122,18 +129,18 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 }
 
 func getResolvedSingletonsFromContainer[TInterface any](con *Container) []TInterface {
-	con.lock.RLock()
-	defer con.lock.RUnlock()
+	con.lock.Lock()
+	defer con.lock.Unlock()
 
 	list := []*concrete{}
 
 	//filtering
 	for _, resolvers := range con.resolvers {
 		for _, resolver := range resolvers {
-			con, isInvokedSingleton := resolver.getInvokedSingleton()
+			singletonConcrete, isInvokedSingleton := resolver.getInvokedSingleton()
 			if isInvokedSingleton {
-				if _, ok := con.value.(TInterface); ok {
-					list = append(list, con)
+				if _, ok := singletonConcrete.value.(TInterface); ok {
+					list = append(list, singletonConcrete)
 				}
 			}
 		}

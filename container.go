@@ -59,15 +59,14 @@ func (this *Container) SetName(name string) *Container {
 	if name == "" {
 		panic("container name can not be empty")
 	}
-
+	this.lock.Lock()
+	defer this.lock.Unlock()
 	if this.name == name {
 		return this
 	}
-
 	if this.name != "" {
 		panic("container name already set")
 	}
-
 	this.name = name
 	return this
 }
@@ -83,6 +82,7 @@ func (this *Container) Validate() {
 	if this.DisableValidation {
 		panic("Validation is disabled")
 	}
+	this.lock.RLock()
 	ctx := context.Background()
 
 	//provide default value for all placeholders
@@ -93,10 +93,14 @@ func (this *Container) Validate() {
 			}
 		}
 	}
+	this.lock.RUnlock()
 
 	//invoke all resolver to detect potential registration problem
 	for _, resolvers := range this.resolvers {
 		for _, resolver := range resolvers {
+			if resolver.isPlaceholder() {
+				continue // placeholder has no constructor to validate
+			}
 			_, ctx = resolver.resolveService(this, ctx)
 		}
 	}
@@ -115,5 +119,7 @@ func (this *Container) Seal() {
 
 // IsSealed checks whether the container is sealed (in readonly mode)
 func (this *Container) IsSealed() bool {
+	this.lock.RLock()
+	defer this.lock.RUnlock()
 	return this.isSealed
 }

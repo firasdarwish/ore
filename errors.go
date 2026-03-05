@@ -23,7 +23,7 @@ func lifetimeMisalignment(resolver resolverMetadata, depResolver resolverMetadat
 }
 
 func cyclicDependency(resolver resolverMetadata) error {
-	return fmt.Errorf("detected cyclic dependency where: %s depends on itself", resolver)
+	return fmt.Errorf("detected cyclic dependency involving: %s", resolver)
 }
 
 func placeholderValueNotProvided(resolver resolverMetadata) error {

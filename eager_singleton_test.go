@@ -37,6 +37,14 @@ func TestRegisterSingletonNilImplementation(t *testing.T) {
 	})
 }
 
+func TestRegisterSingletonTypedNilImplementation(t *testing.T) {
+	clearAll()
+	assert.Panics(t, func() {
+		var a *models.SimpleCounter
+		RegisterSingleton[interfaces.SomeCounter](a)
+	})
+}
+
 func TestRegisterSingletonMultipleImplementations(t *testing.T) {
 	clearAll()
 

@@ -4,6 +4,7 @@ import (
 	"container/list"
 	"context"
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,7 @@ type serviceResolverImpl[T any] struct {
 	anonymousInitializer *Initializer[T]
 	creatorInstance      Creator[T]
 	singletonConcrete    *concrete
+	singletonOnce        *sync.Once
 }
 
 // resolversStack is a stack of [resolverMetadata], similar to a call stack describing How a resolver has
@@ -142,10 +144,13 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 
 	// if was lazily-created, then attach the newly-created concrete implementation
 	// to the service resolver
+	// AFTER — only one goroutine ever runs the initializer
 	if this.lifetime == Singleton {
-		this.singletonConcrete = con
-		replaceResolver(ctn, this)
-		return con, ctx
+		this.singletonOnce.Do(func() {
+			this.singletonConcrete = con
+			replaceResolver(ctn, this)
+		})
+		return this.singletonConcrete, ctx
 	}
 
 	return con, ctx
@@ -190,6 +195,11 @@ func (this serviceResolverImpl[T]) getInvokedSingleton() (con *concrete, isInvok
 func addToContextKeysRepository(ctx context.Context, newContextKey contextKey) context.Context {
 	repository, ok := ctx.Value(contextKeysRepositoryID).(contextKeysRepository)
 	if ok {
+		for _, k := range repository {
+			if k == newContextKey {
+				return ctx // already tracked, don't duplicate
+			}
+		}
 		repository = append(repository, newContextKey)
 	} else {
 		repository = contextKeysRepository{newContextKey}
