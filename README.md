@@ -111,7 +111,7 @@ func main() {
   ore.RegisterSingleton[SomeServiceInterface](&MyService{Message: "Hello, Ore!"})
   
   // Resolve the service
-  service, _ := ore.Get[*SomeServiceInterface](context.Background())
+  service, _ := ore.Get[SomeServiceInterface](context.Background())
   fmt.Println(service.Message) // Output: Hello, Ore!
 }
 ```
