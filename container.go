@@ -115,5 +115,7 @@ func (this *Container) Seal() {
 
 // IsSealed checks whether the container is sealed (in readonly mode)
 func (this *Container) IsSealed() bool {
+	this.lock.RLock()
+	defer this.lock.RUnlock()
 	return this.isSealed
 }
