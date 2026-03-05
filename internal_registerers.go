@@ -31,8 +31,14 @@ func registerSingletonToContainer[T any, K comparable](con *Container, impl T, k
 		panic(nilVal[T]())
 	}
 
-	if reflect.ValueOf(impl).IsNil() {
-		panic(nilVal[T]())
+	v := reflect.ValueOf(impl)
+	kind := v.Kind()
+	if kind == reflect.Ptr || kind == reflect.Interface ||
+		kind == reflect.Slice || kind == reflect.Map ||
+		kind == reflect.Chan || kind == reflect.Func {
+		if v.IsNil() {
+			panic(nilVal[T]())
+		}
 	}
 
 	e := serviceResolverImpl[T]{
