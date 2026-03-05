@@ -129,8 +129,8 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 }
 
 func getResolvedSingletonsFromContainer[TInterface any](con *Container) []TInterface {
-	con.lock.Lock()
-	defer con.lock.Unlock()
+	con.lock.RLock()
+	defer con.lock.RUnlock()
 
 	list := []*concrete{}
 
