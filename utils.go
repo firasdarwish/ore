@@ -24,6 +24,7 @@ func (this *Container) clearAll() {
 	this.aliases = make(map[pointerTypeName][]pointerTypeName)
 	this.isSealed = false
 	this.DisableValidation = false
+	this.name = "DEFAULT"
 }
 
 func clearAll() {
