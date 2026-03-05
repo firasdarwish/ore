@@ -46,9 +46,12 @@ func GetResolvedScopedInstances[TInterface any](ctx context.Context) []TInterfac
 
 	//filtering
 	for _, contextKey := range contextKeyRepository {
-		con := ctx.Value(contextKey).(*concrete)
-		if _, ok := con.value.(TInterface); ok {
-			list = append(list, con)
+		val, ok := ctx.Value(contextKey).(*concrete)
+		if !ok || val == nil {
+			continue
+		}
+		if _, ok := val.value.(TInterface); ok {
+			list = append(list, val)
 		}
 	}
 
