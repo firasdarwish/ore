@@ -89,7 +89,7 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 		pointerTypeNames = []pointerTypeName{inputPointerTypeName}
 	}
 
-	servicesArray := []T{}
+	servicesArray := make([]T, 0, len(pointerTypeNames))
 
 	for i := 0; i < len(pointerTypeNames); i++ {
 		pointerTypeName := pointerTypeNames[i]
