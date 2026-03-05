@@ -2,7 +2,9 @@ package ore
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
+	"sync"
 )
 
 type specialContextKey string
@@ -31,11 +33,28 @@ func clearAll() {
 	DefaultContainer.clearAll()
 }
 
+var (
+	typeNameCache   = map[reflect.Type]pointerTypeName{}
+	typeNameCacheMu sync.RWMutex
+)
+
 // Get type name of *T.
 // it allocates less memory and is faster than `reflect.TypeFor[*T]().String()`
 func getPointerTypeName[T any]() pointerTypeName {
+	t := reflect.TypeFor[*T]()
+	typeNameCacheMu.RLock()
+	if name, ok := typeNameCache[t]; ok {
+		typeNameCacheMu.RUnlock()
+		return name
+	}
+	typeNameCacheMu.RUnlock()
+
 	var mockValue *T
-	return pointerTypeName(fmt.Sprintf("%T", mockValue))
+	name := pointerTypeName(fmt.Sprintf("%T", mockValue))
+	typeNameCacheMu.Lock()
+	typeNameCache[t] = name
+	typeNameCacheMu.Unlock()
+	return name
 }
 
 func getUnderlyingTypeName(ptn pointerTypeName) string {

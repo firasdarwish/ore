@@ -111,8 +111,10 @@ func (this serviceResolverImpl[T]) resolveService(ctn *Container, ctx context.Co
 		marker = pushToStack(currentStack, this.resolverMetadata)
 	}
 	var concreteValue T
-	invocationTime := time.Now()
-
+	var invocationTime time.Time
+	if this.lifetime != Transient {
+		invocationTime = time.Now()
+	}
 	// first, try to make concrete implementation from `anonymousInitializer`
 	// if nil, try the concrete implementation `Creator`
 	if this.anonymousInitializer != nil {

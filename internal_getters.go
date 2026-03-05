@@ -89,7 +89,7 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 		pointerTypeNames = []pointerTypeName{inputPointerTypeName}
 	}
 
-	servicesArray := []T{}
+	servicesArray := make([]T, 0, len(pointerTypeNames))
 
 	for i := 0; i < len(pointerTypeNames); i++ {
 		pointerTypeName := pointerTypeNames[i]
@@ -129,8 +129,8 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 }
 
 func getResolvedSingletonsFromContainer[TInterface any](con *Container) []TInterface {
-	con.lock.Lock()
-	defer con.lock.Unlock()
+	con.lock.RLock()
+	defer con.lock.RUnlock()
 
 	list := []*concrete{}
 

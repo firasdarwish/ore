@@ -13,12 +13,17 @@ func registerCreatorToContainer[T any, K comparable](con *Container, lifetime Li
 		panic(nilVal[T]())
 	}
 
+	var once *sync.Once
+	if lifetime == Singleton {
+		once = &sync.Once{}
+	}
+
 	e := serviceResolverImpl[T]{
 		resolverMetadata: resolverMetadata{
 			lifetime: lifetime,
 		},
 		creatorInstance: creator,
-		singletonOnce:   &sync.Once{},
+		singletonOnce:   once,
 	}
 	addResolver[T](con, e, key)
 }
@@ -31,8 +36,14 @@ func registerSingletonToContainer[T any, K comparable](con *Container, impl T, k
 		panic(nilVal[T]())
 	}
 
-	if reflect.ValueOf(impl).IsNil() {
-		panic(nilVal[T]())
+	v := reflect.ValueOf(impl)
+	kind := v.Kind()
+	if kind == reflect.Ptr || kind == reflect.Interface ||
+		kind == reflect.Slice || kind == reflect.Map ||
+		kind == reflect.Chan || kind == reflect.Func {
+		if v.IsNil() {
+			panic(nilVal[T]())
+		}
 	}
 
 	e := serviceResolverImpl[T]{
@@ -53,12 +64,17 @@ func registerFuncToContainer[T any, K comparable](con *Container, lifetime Lifet
 		panic(nilVal[T]())
 	}
 
+	var once *sync.Once
+	if lifetime == Singleton {
+		once = &sync.Once{}
+	}
+
 	e := serviceResolverImpl[T]{
 		resolverMetadata: resolverMetadata{
 			lifetime: lifetime,
 		},
 		anonymousInitializer: &initializer,
-		singletonOnce:        &sync.Once{},
+		singletonOnce:        once,
 	}
 	addResolver[T](con, e, key)
 }
