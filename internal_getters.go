@@ -29,7 +29,7 @@ func (this *Container) getLastRegisteredResolver(typeID typeID) serviceResolver 
 // sortAndSelect sorts concretes by invocation order and return its value.
 func sortAndSelect[TInterface any](list []*concrete) []TInterface {
 	//sorting
-	sort.Slice(list, func(i, j int) bool {
+	sort.SliceStable(list, func(i, j int) bool {
 		return list[i].invocationTime.After(list[j].invocationTime) ||
 			(list[i].invocationTime == list[j].invocationTime &&
 				list[i].invocationLevel > list[j].invocationLevel)
