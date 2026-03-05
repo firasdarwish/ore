@@ -9,21 +9,17 @@ func (this *Container) getLastRegisteredResolver(typeID typeID) serviceResolver 
 	// try to get service resolver from container
 	this.lock.RLock()
 	resolvers, resolverExists := this.resolvers[typeID]
+	count := len(resolvers)
+	var last serviceResolver
+	if resolverExists && count > 0 {
+		last = resolvers[count-1] // read the value while still under lock
+	}
 	this.lock.RUnlock()
 
-	if !resolverExists {
+	if !resolverExists || count == 0 {
 		return nil
 	}
-
-	count := len(resolvers)
-
-	if count == 0 {
-		return nil
-	}
-
-	// index of the last implementation
-	lastIndex := count - 1
-	return resolvers[lastIndex]
+	return last
 }
 
 // sortAndSelect sorts concretes by invocation order and return its value.
@@ -102,7 +98,14 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 
 		// try to get service resolver from container
 		con.lock.RLock()
-		resolvers, resolverExists := con.resolvers[typeID]
+		rawResolvers, resolverExists := con.resolvers[typeID]
+		var resolvers []serviceResolver
+		if resolverExists {
+			// Copy the slice so the backing array can't be swapped out
+			// by a concurrent replaceResolver (Singleton first-init) mid-iteration.
+			resolvers = make([]serviceResolver, len(rawResolvers))
+			copy(resolvers, rawResolvers)
+		}
 		con.lock.RUnlock()
 
 		if !resolverExists {
