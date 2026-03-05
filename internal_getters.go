@@ -112,8 +112,8 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 				//don't panic, just skip (don't add anything to the list)
 				continue
 			}
-			con, newCtx := resolver.resolveService(con, ctx)
-			servicesArray = append(servicesArray, con.value.(T))
+			resolvedConcrete, newCtx := resolver.resolveService(con, ctx)
+			servicesArray = append(servicesArray, resolvedConcrete.value.(T))
 			ctx = newCtx
 		}
 	}
