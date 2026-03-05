@@ -83,6 +83,7 @@ func (this *Container) Validate() {
 	if this.DisableValidation {
 		panic("Validation is disabled")
 	}
+	this.lock.RLock()
 	ctx := context.Background()
 
 	//provide default value for all placeholders
@@ -93,6 +94,7 @@ func (this *Container) Validate() {
 			}
 		}
 	}
+	this.lock.RUnlock()
 
 	//invoke all resolver to detect potential registration problem
 	for _, resolvers := range this.resolvers {
