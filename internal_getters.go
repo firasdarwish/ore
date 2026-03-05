@@ -80,11 +80,15 @@ func getListFromContainer[T any, K comparable](con *Container, ctx context.Conte
 	inputPointerTypeName := getPointerTypeName[T]()
 
 	con.lock.RLock()
-	pointerTypeNames, implExists := con.aliases[inputPointerTypeName]
+	aliasedNames, implExists := con.aliases[inputPointerTypeName]
 	con.lock.RUnlock()
 
+	var pointerTypeNames []pointerTypeName
+
 	if implExists {
-		pointerTypeNames = append(pointerTypeNames, inputPointerTypeName)
+		pointerTypeNames = make([]pointerTypeName, len(aliasedNames)+1)
+		copy(pointerTypeNames, aliasedNames)
+		pointerTypeNames[len(aliasedNames)] = inputPointerTypeName
 	} else {
 		pointerTypeNames = []pointerTypeName{inputPointerTypeName}
 	}
