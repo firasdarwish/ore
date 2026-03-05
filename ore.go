@@ -70,6 +70,9 @@ func addResolver[T any, K comparable](this *Container, resolver serviceResolverI
 }
 
 func replaceResolver[T any](this *Container, resolver serviceResolverImpl[T]) {
+	if resolver.id.resolverID < 0 {
+		return // never replace a placeholder resolver
+	}
 	this.lock.Lock()
 	defer this.lock.Unlock()
 	this.resolvers[resolver.id.typeID][resolver.id.resolverID] = resolver
