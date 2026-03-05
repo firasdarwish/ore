@@ -195,6 +195,11 @@ func (this serviceResolverImpl[T]) getInvokedSingleton() (con *concrete, isInvok
 func addToContextKeysRepository(ctx context.Context, newContextKey contextKey) context.Context {
 	repository, ok := ctx.Value(contextKeysRepositoryID).(contextKeysRepository)
 	if ok {
+		for _, k := range repository {
+			if k == newContextKey {
+				return ctx // already tracked, don't duplicate
+			}
+		}
 		repository = append(repository, newContextKey)
 	} else {
 		repository = contextKeysRepository{newContextKey}
