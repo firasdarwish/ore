@@ -31,6 +31,10 @@ func registerSingletonToContainer[T any, K comparable](con *Container, impl T, k
 		panic(nilVal[T]())
 	}
 
+	if reflect.ValueOf(impl).IsNil() {
+		panic(nilVal[T]())
+	}
+
 	e := serviceResolverImpl[T]{
 		resolverMetadata: resolverMetadata{
 			lifetime: Singleton,
